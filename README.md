@@ -2,6 +2,8 @@
 
 A programmable BLE device emulator. Design GATT schemas in a web UI and define custom logic to respond to BLE operations—without reflashing firmware.
 
+> **Disclaimer:** I have no prior experience with open source projects and my expertise in these domains is limited. This project has only been tested on Windows 11, is in early development, and most certainly contains bugs and vulnerabilities. Use at your own risk.
+
 ## Prerequisites
 
 ### Using mise (Recommended)
@@ -101,8 +103,7 @@ See component READMEs for details:
 
 ## Documentation
 
-- [backend/plugins/README.md](backend/plugins/README.md) — Plugin system and setup
-- [frontend/docs/](frontend/docs/) — Frontend documentation
+- [frontend/docs/LOGIC_CONSTRUCTOR.md](frontend/docs/LOGIC_CONSTRUCTOR.md) — Logic Constructor documentation
 
 ## License
 
