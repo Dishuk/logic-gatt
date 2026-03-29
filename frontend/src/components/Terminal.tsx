@@ -1,28 +1,24 @@
-import { useState, useRef, useCallback, useEffect, type RefObject } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { Trash2 } from 'lucide-react'
+import type { useLogger } from '../hooks/useLogger'
 
 const MIN_HEIGHT = 100
 const DEFAULT_HEIGHT = 200
 
 interface TerminalProps {
-  deviceLogs: string[]
-  deviceLogRef: RefObject<HTMLPreElement | null>
-  onClearDevice: () => void
-  fnLogs: string[]
-  fnLogRef: RefObject<HTMLPreElement | null>
-  onClearFn: () => void
+  deviceLogger: ReturnType<typeof useLogger>
+  fnLogger: ReturnType<typeof useLogger>
 }
 
-export function Terminal({ deviceLogs, deviceLogRef, onClearDevice, fnLogs, fnLogRef, onClearFn }: TerminalProps) {
+export function Terminal({ deviceLogger, fnLogger }: TerminalProps) {
   const [tab, setTab] = useState<'device' | 'functions'>('device')
   const [height, setHeight] = useState(DEFAULT_HEIGHT)
   const isDragging = useRef(false)
   const startY = useRef(0)
   const startHeight = useRef(0)
 
-  const logs = tab === 'device' ? deviceLogs : fnLogs
-  const logRef = tab === 'device' ? deviceLogRef : fnLogRef
-  const onClear = tab === 'device' ? onClearDevice : onClearFn
+  const logger = tab === 'device' ? deviceLogger : fnLogger
+  const { logs, ref: logRef, clear: onClear } = logger
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {

@@ -8,6 +8,7 @@ import { CodeEditorPanel } from './components/CodeEditorPanel'
 import { Terminal } from './components/Terminal'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { importProject } from './lib/schemaIO'
+import { SchemaProvider } from './contexts'
 import defaultProjectJson from './data/defaultProject.json'
 import heartRateMonitorJson from './data/heartRateMonitor.json'
 
@@ -26,14 +27,14 @@ const EXAMPLE_PROJECTS: ExampleProject[] = [
 
 export function App() {
   // Logging
-  const { logs, log, clear, ref: logRef } = useLogger()
-  const { logs: fnLogs, log: fnLog, clear: fnClear, ref: fnLogRef } = useLogger()
+  const deviceLogger = useLogger()
+  const fnLogger = useLogger()
 
   // Project state
-  const project = useProject(log)
+  const project = useProject(deviceLogger.log)
 
   // Transport connection
-  const transport = useTransport({ log, fnLog })
+  const transport = useTransport({ log: deviceLogger.log, fnLog: fnLogger.log })
 
   const handleUpload = () => {
     transport.handleUpload(project.services, project.deviceSettings, {
@@ -53,9 +54,9 @@ export function App() {
       project.setVariables(data.variables)
       project.setTests(data.tests)
       project.setScenarios(data.scenarios)
-      log(`Loaded example: ${example.name}`)
+      deviceLogger.log(`Loaded example: ${example.name}`)
     } catch (err) {
-      log(`Failed to load example: ${err instanceof Error ? err.message : String(err)}`)
+      deviceLogger.log(`Failed to load example: ${err instanceof Error ? err.message : String(err)}`)
     }
   }
 
@@ -63,51 +64,20 @@ export function App() {
     <ErrorBoundary>
       <div className="layout">
         <TopBar
-          portName={transport.portName}
-          uploading={transport.uploading}
-          running={transport.running}
-          uploadDisabled={transport.uploading || project.services.length === 0 || !transport.port}
-          onConnect={transport.connect}
+          transport={transport}
+          project={project}
+          logger={deviceLogger}
           onUpload={handleUpload}
-          onStop={transport.handleStop}
-          onImport={project.handleImport}
-          onExport={project.handleExport}
-          onLoadExample={handleLoadExample}
           examples={EXAMPLE_PROJECTS}
-          log={log}
+          onLoadExample={handleLoadExample}
         />
         <div className="panels">
-          <ServicesPanel
-            deviceSettings={project.deviceSettings}
-            onDeviceSettingsChange={project.setDeviceSettings}
-            services={project.services}
-            onAdd={project.addService}
-            onChange={project.updateService}
-            onRemove={project.removeService}
-          />
-          <CodeEditorPanel
-            functions={project.functions}
-            variables={project.variables}
-            tests={project.tests}
-            scenarios={project.scenarios}
-            services={project.services}
-            onFunctionsChange={project.setFunctions}
-            onVariablesChange={project.setVariables}
-            onTestsChange={project.setTests}
-            onScenariosChange={project.setScenarios}
-            fnLog={fnLog}
-            onRunScenario={transport.runScenario}
-            isRunning={transport.running}
-          />
+          <ServicesPanel project={project} />
+          <SchemaProvider services={project.services} functions={project.functions}>
+            <CodeEditorPanel project={project} fnLogger={fnLogger} transport={transport} />
+          </SchemaProvider>
         </div>
-        <Terminal
-          deviceLogs={logs}
-          deviceLogRef={logRef}
-          onClearDevice={clear}
-          fnLogs={fnLogs}
-          fnLogRef={fnLogRef}
-          onClearFn={fnClear}
-        />
+        <Terminal deviceLogger={deviceLogger} fnLogger={fnLogger} />
       </div>
     </ErrorBoundary>
   )

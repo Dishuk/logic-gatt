@@ -1,16 +1,17 @@
 import type { Characteristic } from '../types'
 import { HexByteInput } from './HexByteInput'
 import { UuidInput } from './UuidInput'
+import { useValidation } from '../contexts'
 import { X } from 'lucide-react'
 
 interface CharacteristicRowProps {
   characteristic: Characteristic
-  dupUuids: Set<string>
   onChange: (c: Characteristic) => void
   onRemove: () => void
 }
 
-export function CharacteristicRow({ characteristic, dupUuids, onChange, onRemove }: CharacteristicRowProps) {
+export function CharacteristicRow({ characteristic, onChange, onRemove }: CharacteristicRowProps) {
+  const { dupUuids } = useValidation()
   const { properties } = characteristic
 
   function toggleProp(prop: keyof typeof properties) {

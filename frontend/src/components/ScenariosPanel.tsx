@@ -9,6 +9,7 @@ import {
   type UserFunction,
   type Characteristic,
 } from '../types'
+import { useSchema } from '../contexts'
 import { Card, CardHeader, CardBody } from './Card'
 import { X, GripVertical, Play } from 'lucide-react'
 import type { DragEndEvent } from '@dnd-kit/core'
@@ -25,8 +26,6 @@ import { CSS } from '@dnd-kit/utilities'
 interface ScenariosPanelProps {
   scenarios: Scenario[]
   onScenariosChange: (scenarios: Scenario[]) => void
-  services: Schema
-  functions: UserFunction[]
   onRunScenario?: (scenario: Scenario) => void
   isRunning?: boolean
 }
@@ -155,14 +154,13 @@ function ErrorMsg({ msg }: { msg?: string }) {
 function TriggerEditor({
   trigger,
   onChange,
-  services,
   error,
 }: {
   trigger: Trigger
   onChange: (t: Trigger) => void
-  services: Schema
   error?: string
 }) {
+  const { services } = useSchema()
   return (
     <div className="scenario-section">
       <div className="scenario-section-title">
@@ -253,8 +251,6 @@ function SortableStepRow({
   index,
   onChange,
   onRemove,
-  services,
-  functions,
   error,
 }: {
   step: Step
@@ -262,10 +258,9 @@ function SortableStepRow({
   index: number
   onChange: (s: Step) => void
   onRemove: () => void
-  services: Schema
-  functions: UserFunction[]
   error?: string
 }) {
+  const { services, functions } = useSchema()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stepId })
 
   const style = {
@@ -359,8 +354,6 @@ function SortableStepRow({
 interface ScenarioCardProps {
   scenario: Scenario
   errors: ScenarioErrors
-  services: Schema
-  functions: UserFunction[]
   onChange: (s: Scenario) => void
   onRemove: () => void
   onRun?: () => void
@@ -370,8 +363,6 @@ interface ScenarioCardProps {
 function SortableScenarioCard({
   scenario,
   errors,
-  services,
-  functions,
   onChange,
   onRemove,
   onRun,
@@ -473,7 +464,6 @@ function SortableScenarioCard({
             <TriggerEditor
               trigger={scenario.trigger}
               onChange={trigger => onChange({ ...scenario, trigger })}
-              services={services}
               error={errors.trigger}
             />
             <div className="scenario-section">
@@ -488,8 +478,6 @@ function SortableScenarioCard({
                       index={i}
                       onChange={s => updateStep(i, s)}
                       onRemove={() => removeStep(i)}
-                      services={services}
-                      functions={functions}
                       error={errors.steps[i]}
                     />
                   ))}
@@ -510,11 +498,10 @@ function SortableScenarioCard({
 export function ScenariosPanel({
   scenarios,
   onScenariosChange,
-  services,
-  functions,
   onRunScenario,
   isRunning,
 }: ScenariosPanelProps) {
+  const { services, functions } = useSchema()
   const allErrors = useMemo(() => {
     const map = new Map<string, ScenarioErrors>()
     for (const s of scenarios) {
@@ -567,8 +554,6 @@ export function ScenariosPanel({
               key={s.id}
               scenario={s}
               errors={allErrors.get(s.id) ?? { steps: [] }}
-              services={services}
-              functions={functions}
               onChange={updateScenario}
               onRemove={() => removeScenario(s.id)}
               onRun={() => onRunScenario?.(s)}

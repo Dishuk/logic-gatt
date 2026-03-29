@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { TransportConnection } from '../lib/transport/types'
+import type { Service } from '../types'
 import { BackendTransportModal } from './BackendTransportModal'
 
 export interface ExampleProject {
@@ -9,34 +10,30 @@ export interface ExampleProject {
 }
 
 interface TopBarProps {
-  portName: string | null
-  uploading: boolean
-  running: boolean
-  uploadDisabled: boolean
-  onConnect: (connection: TransportConnection, label: string) => void
+  transport: {
+    port: TransportConnection | null
+    portName: string | null
+    uploading: boolean
+    running: boolean
+    connect: (connection: TransportConnection, label: string) => void
+    handleStop: () => void
+  }
+  project: {
+    services: Service[]
+    handleImport: () => void
+    handleExport: () => void
+  }
+  logger: { log: (msg: string) => void }
   onUpload: () => void
-  onStop: () => void
-  onImport: () => void
-  onExport: () => void
-  onLoadExample?: (example: ExampleProject) => void
   examples?: ExampleProject[]
-  log: (msg: string) => void
+  onLoadExample?: (example: ExampleProject) => void
 }
 
-export function TopBar({
-  portName,
-  uploading,
-  running,
-  uploadDisabled,
-  onConnect,
-  onUpload,
-  onStop,
-  onImport,
-  onExport,
-  onLoadExample,
-  examples = [],
-  log,
-}: TopBarProps) {
+export function TopBar({ transport, project, logger, onUpload, examples = [], onLoadExample }: TopBarProps) {
+  const { port, portName, uploading, running, connect, handleStop } = transport
+  const { services, handleImport, handleExport } = project
+  const { log } = logger
+  const uploadDisabled = uploading || services.length === 0 || !port
   const [showHelp, setShowHelp] = useState(false)
   const [showExamples, setShowExamples] = useState(false)
   const [showTransport, setShowTransport] = useState(false)
@@ -50,14 +47,14 @@ export function TopBar({
         </button>
         <button
           className={running ? 'stop-btn' : ''}
-          onClick={running ? onStop : onUpload}
+          onClick={running ? handleStop : onUpload}
           disabled={!running && uploadDisabled}
           style={{ minWidth: '7rem' }}
         >
           {running ? 'Stop' : uploading ? 'Uploading...' : 'Upload & Run'}
         </button>
-        <button onClick={onImport}>Import</button>
-        <button onClick={onExport}>Export</button>
+        <button onClick={handleImport}>Import</button>
+        <button onClick={handleExport}>Export</button>
         {examples.length > 0 && (
           <div className="examples-dropdown">
             <button className="examples-btn" onClick={() => setShowExamples(!showExamples)}>
@@ -183,7 +180,7 @@ export function TopBar({
       {showTransport && (
         <BackendTransportModal
           onConnect={(connection, label) => {
-            onConnect(connection, label)
+            connect(connection, label)
             setShowTransport(false)
           }}
           onClose={() => setShowTransport(false)}

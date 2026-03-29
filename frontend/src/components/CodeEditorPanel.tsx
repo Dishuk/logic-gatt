@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
-import type { UserFunction, UserVariable, UserTest, VarType, Scenario, Schema } from '../types'
+import type { UserFunction, UserVariable, UserTest, VarType, Scenario } from '../types'
 import { useCodeMirror } from '../hooks/useCodeMirror'
 import { useSettings } from '../hooks/useSettings'
 import { createCompletionSource } from '../lib/completions'
@@ -80,18 +80,21 @@ function ThemePreview({ theme }: { theme: Extension }) {
 }
 
 interface CodeEditorPanelProps {
-  functions: UserFunction[]
-  variables: UserVariable[]
-  tests: UserTest[]
-  scenarios: Scenario[]
-  services: Schema
-  onFunctionsChange: (fns: UserFunction[]) => void
-  onVariablesChange: (vars: UserVariable[]) => void
-  onTestsChange: (tests: UserTest[]) => void
-  onScenariosChange: (scenarios: Scenario[]) => void
-  fnLog: (msg: string) => void
-  onRunScenario?: (scenario: Scenario) => void
-  isRunning?: boolean
+  project: {
+    functions: UserFunction[]
+    variables: UserVariable[]
+    tests: UserTest[]
+    scenarios: Scenario[]
+    setFunctions: (fns: UserFunction[]) => void
+    setVariables: (vars: UserVariable[]) => void
+    setTests: (tests: UserTest[]) => void
+    setScenarios: (scenarios: Scenario[]) => void
+  }
+  fnLogger: { log: (msg: string) => void }
+  transport: {
+    runScenario: (scenario: Scenario) => void
+    running: boolean
+  }
 }
 
 function SortableFnEntry({
@@ -242,20 +245,10 @@ function findDuplicateNames(items: { name: string }[]): Set<string> {
   return dupes
 }
 
-export function CodeEditorPanel({
-  functions,
-  variables,
-  tests,
-  scenarios,
-  services,
-  onFunctionsChange,
-  onVariablesChange,
-  onTestsChange,
-  onScenariosChange,
-  fnLog,
-  onRunScenario,
-  isRunning,
-}: CodeEditorPanelProps) {
+export function CodeEditorPanel({ project, fnLogger, transport }: CodeEditorPanelProps) {
+  const { functions, variables, tests, scenarios, setFunctions, setVariables, setTests, setScenarios } = project
+  const { log: fnLog } = fnLogger
+  const { runScenario, running } = transport
   const { settings, setSetting } = useSettings()
   const themeExtension = useMemo(() => themes[settings.editorTheme] ?? themes['Default Dark'], [settings.editorTheme])
   const [tab, setTab] = useState<'scenarios' | 'functions' | 'variables' | 'test' | 'settings'>('scenarios')
@@ -283,7 +276,7 @@ export function CodeEditorPanel({
     if (over && active.id !== over.id) {
       const oldIndex = functions.findIndex(f => f.id === active.id)
       const newIndex = functions.findIndex(f => f.id === over.id)
-      onFunctionsChange(arrayMove(functions, oldIndex, newIndex))
+      setFunctions(arrayMove(functions, oldIndex, newIndex))
     }
   }
 
@@ -292,16 +285,16 @@ export function CodeEditorPanel({
     if (over && active.id !== over.id) {
       const oldIndex = variables.findIndex(v => v.id === active.id)
       const newIndex = variables.findIndex(v => v.id === over.id)
-      onVariablesChange(arrayMove(variables, oldIndex, newIndex))
+      setVariables(arrayMove(variables, oldIndex, newIndex))
     }
   }
 
   function addFunction() {
-    onFunctionsChange([...functions, { id: crypto.randomUUID(), name: '', body: '' }])
+    setFunctions([...functions, { id: crypto.randomUUID(), name: '', body: '' }])
   }
 
   function addVariable() {
-    onVariablesChange([...variables, { id: crypto.randomUUID(), name: '', type: 'hex', initialValue: '' }])
+    setVariables([...variables, { id: crypto.randomUUID(), name: '', type: 'hex', initialValue: '' }])
   }
 
   return (
@@ -329,11 +322,9 @@ export function CodeEditorPanel({
           <div style={{ display: tab === 'scenarios' ? undefined : 'none' }}>
             <ScenariosPanel
               scenarios={scenarios}
-              onScenariosChange={onScenariosChange}
-              services={services}
-              functions={functions}
-              onRunScenario={onRunScenario}
-              isRunning={isRunning}
+              onScenariosChange={setScenarios}
+              onRunScenario={runScenario}
+              isRunning={running}
             />
           </div>
           <div style={{ display: tab === 'functions' ? undefined : 'none' }}>
@@ -346,8 +337,8 @@ export function CodeEditorPanel({
                     isDuplicate={dupFnNames.has(fn.name)}
                     completionSource={completionSource}
                     theme={themeExtension}
-                    onChange={updated => onFunctionsChange(functions.map((f, j) => (j === i ? updated : f)))}
-                    onRemove={() => onFunctionsChange(functions.filter((_, j) => j !== i))}
+                    onChange={updated => setFunctions(functions.map((f, j) => (j === i ? updated : f)))}
+                    onRemove={() => setFunctions(functions.filter((_, j) => j !== i))}
                   />
                 ))}
               </SortableContext>
@@ -364,8 +355,8 @@ export function CodeEditorPanel({
                     key={v.id}
                     v={v}
                     isDuplicate={dupVarNames.has(v.name)}
-                    onChange={updated => onVariablesChange(variables.map((x, j) => (j === i ? updated : x)))}
-                    onRemove={() => onVariablesChange(variables.filter((_, j) => j !== i))}
+                    onChange={updated => setVariables(variables.map((x, j) => (j === i ? updated : x)))}
+                    onRemove={() => setVariables(variables.filter((_, j) => j !== i))}
                   />
                 ))}
               </SortableContext>
@@ -379,8 +370,8 @@ export function CodeEditorPanel({
               functions={functions}
               variables={variables}
               tests={tests}
-              onVariablesChange={onVariablesChange}
-              onTestsChange={onTestsChange}
+              onVariablesChange={setVariables}
+              onTestsChange={setTests}
               fnLog={fnLog}
             />
           </div>

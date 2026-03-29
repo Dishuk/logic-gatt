@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import type { UserFunction, UserVariable, UserTest, Scenario, Schema } from '../types'
 import { SettingsProvider } from '../hooks/useSettings'
+import { SchemaProvider } from '../contexts'
 
 // Mock CodeMirror hook since it requires browser APIs
 vi.mock('../hooks/useCodeMirror', () => ({
@@ -25,21 +26,46 @@ vi.mock('../themes', () => ({
 // Import after mocks are set up
 import { CodeEditorPanel } from '../components/CodeEditorPanel'
 
-const defaultProps = {
-  functions: [] as UserFunction[],
-  variables: [] as UserVariable[],
-  tests: [] as UserTest[],
-  scenarios: [] as Scenario[],
-  services: [] as Schema,
-  onFunctionsChange: vi.fn(),
-  onVariablesChange: vi.fn(),
-  onTestsChange: vi.fn(),
-  onScenariosChange: vi.fn(),
-  fnLog: vi.fn(),
+function createDefaultProps(overrides: {
+  functions?: UserFunction[]
+  variables?: UserVariable[]
+  tests?: UserTest[]
+  scenarios?: Scenario[]
+  setFunctions?: ReturnType<typeof vi.fn>
+  setVariables?: ReturnType<typeof vi.fn>
+  setTests?: ReturnType<typeof vi.fn>
+  setScenarios?: ReturnType<typeof vi.fn>
+  fnLog?: ReturnType<typeof vi.fn>
+} = {}) {
+  return {
+    project: {
+      functions: overrides.functions ?? ([] as UserFunction[]),
+      variables: overrides.variables ?? ([] as UserVariable[]),
+      tests: overrides.tests ?? ([] as UserTest[]),
+      scenarios: overrides.scenarios ?? ([] as Scenario[]),
+      setFunctions: overrides.setFunctions ?? vi.fn(),
+      setVariables: overrides.setVariables ?? vi.fn(),
+      setTests: overrides.setTests ?? vi.fn(),
+      setScenarios: overrides.setScenarios ?? vi.fn(),
+    },
+    fnLogger: {
+      log: overrides.fnLog ?? vi.fn(),
+    },
+    transport: {
+      runScenario: vi.fn(),
+      running: false,
+    },
+  }
 }
 
-function renderWithSettings(ui: React.ReactElement) {
-  return render(<SettingsProvider>{ui}</SettingsProvider>)
+function renderWithSettings(ui: React.ReactElement, services: Schema = [], functions: UserFunction[] = []) {
+  return render(
+    <SettingsProvider>
+      <SchemaProvider services={services} functions={functions}>
+        {ui}
+      </SchemaProvider>
+    </SettingsProvider>
+  )
 }
 
 describe('CodeEditorPanel', () => {
@@ -49,7 +75,7 @@ describe('CodeEditorPanel', () => {
 
   describe('tab switching', () => {
     it('should render all tabs', () => {
-      renderWithSettings(<CodeEditorPanel {...defaultProps} />)
+      renderWithSettings(<CodeEditorPanel {...createDefaultProps()} />)
 
       expect(screen.getByText('Scenarios')).toBeInTheDocument()
       expect(screen.getByText('Functions')).toBeInTheDocument()
@@ -58,14 +84,14 @@ describe('CodeEditorPanel', () => {
     })
 
     it('should start on Scenarios tab', () => {
-      renderWithSettings(<CodeEditorPanel {...defaultProps} />)
+      renderWithSettings(<CodeEditorPanel {...createDefaultProps()} />)
 
       const scenariosTab = screen.getByText('Scenarios')
       expect(scenariosTab.className).toContain('tab--active')
     })
 
     it('should switch to Functions tab on click', () => {
-      renderWithSettings(<CodeEditorPanel {...defaultProps} />)
+      renderWithSettings(<CodeEditorPanel {...createDefaultProps()} />)
 
       fireEvent.click(screen.getByText('Functions'))
 
@@ -74,7 +100,7 @@ describe('CodeEditorPanel', () => {
     })
 
     it('should switch to Variables tab on click', () => {
-      renderWithSettings(<CodeEditorPanel {...defaultProps} />)
+      renderWithSettings(<CodeEditorPanel {...createDefaultProps()} />)
 
       fireEvent.click(screen.getByText('Variables'))
 
@@ -83,7 +109,7 @@ describe('CodeEditorPanel', () => {
     })
 
     it('should switch to Test tab on click', () => {
-      renderWithSettings(<CodeEditorPanel {...defaultProps} />)
+      renderWithSettings(<CodeEditorPanel {...createDefaultProps()} />)
 
       fireEvent.click(screen.getByText('Test'))
 
@@ -94,44 +120,44 @@ describe('CodeEditorPanel', () => {
 
   describe('add buttons', () => {
     it('should show Add Function button in Functions tab', () => {
-      renderWithSettings(<CodeEditorPanel {...defaultProps} />)
+      renderWithSettings(<CodeEditorPanel {...createDefaultProps()} />)
 
       fireEvent.click(screen.getByText('Functions'))
 
       expect(screen.getByText('+ Add Function')).toBeInTheDocument()
     })
 
-    it('should call onFunctionsChange when Add Function clicked', () => {
-      const onFunctionsChange = vi.fn()
-      renderWithSettings(<CodeEditorPanel {...defaultProps} onFunctionsChange={onFunctionsChange} />)
+    it('should call setFunctions when Add Function clicked', () => {
+      const setFunctions = vi.fn()
+      renderWithSettings(<CodeEditorPanel {...createDefaultProps({ setFunctions })} />)
 
       fireEvent.click(screen.getByText('Functions'))
       fireEvent.click(screen.getByText('+ Add Function'))
 
-      expect(onFunctionsChange).toHaveBeenCalledTimes(1)
-      const newFunctions = onFunctionsChange.mock.calls[0][0]
+      expect(setFunctions).toHaveBeenCalledTimes(1)
+      const newFunctions = setFunctions.mock.calls[0][0]
       expect(newFunctions).toHaveLength(1)
       expect(newFunctions[0].name).toBe('')
       expect(newFunctions[0].body).toBe('')
     })
 
     it('should show Add Variable button in Variables tab', () => {
-      renderWithSettings(<CodeEditorPanel {...defaultProps} />)
+      renderWithSettings(<CodeEditorPanel {...createDefaultProps()} />)
 
       fireEvent.click(screen.getByText('Variables'))
 
       expect(screen.getByText('+ Add Variable')).toBeInTheDocument()
     })
 
-    it('should call onVariablesChange when Add Variable clicked', () => {
-      const onVariablesChange = vi.fn()
-      renderWithSettings(<CodeEditorPanel {...defaultProps} onVariablesChange={onVariablesChange} />)
+    it('should call setVariables when Add Variable clicked', () => {
+      const setVariables = vi.fn()
+      renderWithSettings(<CodeEditorPanel {...createDefaultProps({ setVariables })} />)
 
       fireEvent.click(screen.getByText('Variables'))
       fireEvent.click(screen.getByText('+ Add Variable'))
 
-      expect(onVariablesChange).toHaveBeenCalledTimes(1)
-      const newVariables = onVariablesChange.mock.calls[0][0]
+      expect(setVariables).toHaveBeenCalledTimes(1)
+      const newVariables = setVariables.mock.calls[0][0]
       expect(newVariables).toHaveLength(1)
       expect(newVariables[0].name).toBe('')
       expect(newVariables[0].type).toBe('hex')
@@ -140,7 +166,7 @@ describe('CodeEditorPanel', () => {
 
   describe('header', () => {
     it('should render panel header', () => {
-      renderWithSettings(<CodeEditorPanel {...defaultProps} />)
+      renderWithSettings(<CodeEditorPanel {...createDefaultProps()} />)
 
       expect(screen.getByText('Code Editor')).toBeInTheDocument()
     })
@@ -159,7 +185,7 @@ describe('findDuplicateNames (via component behavior)', () => {
       { id: '3', name: 'unique', body: '' },
     ]
 
-    const { container } = renderWithSettings(<CodeEditorPanel {...defaultProps} functions={functions} />)
+    const { container } = renderWithSettings(<CodeEditorPanel {...createDefaultProps({ functions })} />)
 
     fireEvent.click(screen.getByText('Functions'))
 
@@ -174,7 +200,7 @@ describe('findDuplicateNames (via component behavior)', () => {
       { id: '2', name: 'dup', type: 'u16', initialValue: '0' },
     ]
 
-    const { container } = renderWithSettings(<CodeEditorPanel {...defaultProps} variables={variables} />)
+    const { container } = renderWithSettings(<CodeEditorPanel {...createDefaultProps({ variables })} />)
 
     fireEvent.click(screen.getByText('Variables'))
 
@@ -188,7 +214,7 @@ describe('findDuplicateNames (via component behavior)', () => {
       { id: '2', name: 'fn2', body: '' },
     ]
 
-    const { container } = renderWithSettings(<CodeEditorPanel {...defaultProps} functions={functions} />)
+    const { container } = renderWithSettings(<CodeEditorPanel {...createDefaultProps({ functions })} />)
 
     fireEvent.click(screen.getByText('Functions'))
 
@@ -202,7 +228,7 @@ describe('findDuplicateNames (via component behavior)', () => {
       { id: '2', name: '', body: '' },
     ]
 
-    const { container } = renderWithSettings(<CodeEditorPanel {...defaultProps} functions={functions} />)
+    const { container } = renderWithSettings(<CodeEditorPanel {...createDefaultProps({ functions })} />)
 
     fireEvent.click(screen.getByText('Functions'))
 
@@ -219,7 +245,7 @@ describe('variable type handling', () => {
   it('should render hex input for hex type variables', () => {
     const variables: UserVariable[] = [{ id: '1', name: 'buf', type: 'hex', initialValue: 'AA BB' }]
 
-    renderWithSettings(<CodeEditorPanel {...defaultProps} variables={variables} />)
+    renderWithSettings(<CodeEditorPanel {...createDefaultProps({ variables })} />)
 
     fireEvent.click(screen.getByText('Variables'))
 
@@ -230,7 +256,7 @@ describe('variable type handling', () => {
   it('should render text input for numeric type variables', () => {
     const variables: UserVariable[] = [{ id: '1', name: 'num', type: 'u8', initialValue: '42' }]
 
-    renderWithSettings(<CodeEditorPanel {...defaultProps} variables={variables} />)
+    renderWithSettings(<CodeEditorPanel {...createDefaultProps({ variables })} />)
 
     fireEvent.click(screen.getByText('Variables'))
 
@@ -241,7 +267,7 @@ describe('variable type handling', () => {
   it('should show type selector for variables', () => {
     const variables: UserVariable[] = [{ id: '1', name: 'test', type: 'u8', initialValue: '0' }]
 
-    renderWithSettings(<CodeEditorPanel {...defaultProps} variables={variables} />)
+    renderWithSettings(<CodeEditorPanel {...createDefaultProps({ variables })} />)
 
     fireEvent.click(screen.getByText('Variables'))
 

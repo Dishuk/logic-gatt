@@ -30,19 +30,30 @@ const defaultDeviceSettings: DeviceSettings = {
   manufacturerData: '',
 }
 
+function createDefaultProps(overrides: {
+  deviceSettings?: DeviceSettings
+  services?: Service[]
+  setDeviceSettings?: () => void
+  addService?: ReturnType<typeof vi.fn>
+  updateService?: () => void
+  removeService?: () => void
+} = {}) {
+  return {
+    project: {
+      deviceSettings: overrides.deviceSettings ?? defaultDeviceSettings,
+      setDeviceSettings: overrides.setDeviceSettings ?? (() => {}),
+      services: overrides.services ?? [],
+      addService: overrides.addService ?? (() => {}),
+      updateService: overrides.updateService ?? (() => {}),
+      removeService: overrides.removeService ?? (() => {}),
+    },
+  }
+}
+
 describe('ServicesPanel', () => {
   describe('rendering', () => {
     it('should render with no services', () => {
-      render(
-        <ServicesPanel
-          deviceSettings={defaultDeviceSettings}
-          onDeviceSettingsChange={() => {}}
-          services={[]}
-          onAdd={() => {}}
-          onChange={() => {}}
-          onRemove={() => {}}
-        />
-      )
+      render(<ServicesPanel {...createDefaultProps()} />)
 
       expect(screen.getByText('Services (0/8)')).toBeInTheDocument()
       expect(screen.getByText('+ Add Service')).toBeInTheDocument()
@@ -51,16 +62,7 @@ describe('ServicesPanel', () => {
     it('should render service count correctly', () => {
       const services = [createService('1', 'uuid-1'), createService('2', 'uuid-2')]
 
-      render(
-        <ServicesPanel
-          deviceSettings={defaultDeviceSettings}
-          onDeviceSettingsChange={() => {}}
-          services={services}
-          onAdd={() => {}}
-          onChange={() => {}}
-          onRemove={() => {}}
-        />
-      )
+      render(<ServicesPanel {...createDefaultProps({ services })} />)
 
       expect(screen.getByText('Services (2/8)')).toBeInTheDocument()
     })
@@ -77,52 +79,25 @@ describe('ServicesPanel', () => {
         createService('8', 'uuid-8'),
       ]
 
-      render(
-        <ServicesPanel
-          deviceSettings={defaultDeviceSettings}
-          onDeviceSettingsChange={() => {}}
-          services={services}
-          onAdd={() => {}}
-          onChange={() => {}}
-          onRemove={() => {}}
-        />
-      )
+      render(<ServicesPanel {...createDefaultProps({ services })} />)
 
       expect(screen.getByText('Services (8/8)')).toBeInTheDocument()
       expect(screen.queryByText('+ Add Service')).not.toBeInTheDocument()
     })
 
-    it('should call onAdd when add button clicked', () => {
-      const onAdd = vi.fn()
+    it('should call addService when add button clicked', () => {
+      const addService = vi.fn()
 
-      render(
-        <ServicesPanel
-          deviceSettings={defaultDeviceSettings}
-          onDeviceSettingsChange={() => {}}
-          services={[]}
-          onAdd={onAdd}
-          onChange={() => {}}
-          onRemove={() => {}}
-        />
-      )
+      render(<ServicesPanel {...createDefaultProps({ addService })} />)
 
       fireEvent.click(screen.getByText('+ Add Service'))
-      expect(onAdd).toHaveBeenCalledTimes(1)
+      expect(addService).toHaveBeenCalledTimes(1)
     })
   })
 
   describe('device settings', () => {
     it('should render device settings card', () => {
-      render(
-        <ServicesPanel
-          deviceSettings={defaultDeviceSettings}
-          onDeviceSettingsChange={() => {}}
-          services={[]}
-          onAdd={() => {}}
-          onChange={() => {}}
-          onRemove={() => {}}
-        />
-      )
+      render(<ServicesPanel {...createDefaultProps()} />)
 
       // DeviceSettingsCard should be present
       expect(screen.getByText('Device Settings')).toBeInTheDocument()
@@ -139,16 +114,7 @@ describe('findDuplicateUuids (via component behavior)', () => {
       createService('2', 'uuid-b', ['char-3', 'char-4']),
     ]
 
-    const { container } = render(
-      <ServicesPanel
-        deviceSettings={defaultDeviceSettings}
-        onDeviceSettingsChange={() => {}}
-        services={services}
-        onAdd={() => {}}
-        onChange={() => {}}
-        onRemove={() => {}}
-      />
-    )
+    const { container } = render(<ServicesPanel {...createDefaultProps({ services })} />)
 
     // No error classes should be present
     expect(container.querySelectorAll('.input--error')).toHaveLength(0)
@@ -157,16 +123,7 @@ describe('findDuplicateUuids (via component behavior)', () => {
   it('should detect duplicate service UUIDs', () => {
     const services = [createService('1', 'duplicate-uuid'), createService('2', 'duplicate-uuid')]
 
-    const { container } = render(
-      <ServicesPanel
-        deviceSettings={defaultDeviceSettings}
-        onDeviceSettingsChange={() => {}}
-        services={services}
-        onAdd={() => {}}
-        onChange={() => {}}
-        onRemove={() => {}}
-      />
-    )
+    const { container } = render(<ServicesPanel {...createDefaultProps({ services })} />)
 
     // Both service UUID inputs should have error class
     const errorInputs = container.querySelectorAll('.input--error')
@@ -179,16 +136,7 @@ describe('findDuplicateUuids (via component behavior)', () => {
       createService('2', 'svc-2', ['shared-char-uuid']),
     ]
 
-    const { container } = render(
-      <ServicesPanel
-        deviceSettings={defaultDeviceSettings}
-        onDeviceSettingsChange={() => {}}
-        services={services}
-        onAdd={() => {}}
-        onChange={() => {}}
-        onRemove={() => {}}
-      />
-    )
+    const { container } = render(<ServicesPanel {...createDefaultProps({ services })} />)
 
     // Characteristic UUID inputs should have error class
     const errorInputs = container.querySelectorAll('.input--error')
@@ -198,16 +146,7 @@ describe('findDuplicateUuids (via component behavior)', () => {
   it('should detect duplicate between service and characteristic UUID', () => {
     const services = [createService('1', 'shared-uuid', []), createService('2', 'svc-2', ['shared-uuid'])]
 
-    const { container } = render(
-      <ServicesPanel
-        deviceSettings={defaultDeviceSettings}
-        onDeviceSettingsChange={() => {}}
-        services={services}
-        onAdd={() => {}}
-        onChange={() => {}}
-        onRemove={() => {}}
-      />
-    )
+    const { container } = render(<ServicesPanel {...createDefaultProps({ services })} />)
 
     // Both the service UUID and characteristic UUID should be marked as duplicates
     const errorInputs = container.querySelectorAll('.input--error')
@@ -217,16 +156,7 @@ describe('findDuplicateUuids (via component behavior)', () => {
   it('should not flag empty UUIDs as duplicates', () => {
     const services = [createService('1', '', ['', '']), createService('2', '', [''])]
 
-    const { container } = render(
-      <ServicesPanel
-        deviceSettings={defaultDeviceSettings}
-        onDeviceSettingsChange={() => {}}
-        services={services}
-        onAdd={() => {}}
-        onChange={() => {}}
-        onRemove={() => {}}
-      />
-    )
+    const { container } = render(<ServicesPanel {...createDefaultProps({ services })} />)
 
     // Empty UUIDs should not be flagged
     expect(container.querySelectorAll('.input--error')).toHaveLength(0)
