@@ -1,0 +1,65 @@
+:root {
+  /* ===== Background colors ===== */
+  --bg-darkest: #0d1117; /* Inputs, terminal, code blocks */
+  --bg-dark: #131920; /* Card headers, nested elements */
+  --bg-body: #1a1a2e; /* Main body background */
+
+  /* Button backgrounds */
+  --bg-button: #16213e;
+  --bg-button-hover: #1a2d5a;
+  --bg-topbar: #0f3460;
+
+  /* Error backgrounds */
+  --bg-error: #1c0c0c;
+  --bg-error-btn: #3d1117;
+  --bg-error-btn-hover: #4d1a1f;
+
+  /* ===== Border colors ===== */
+  --border-primary: #21262d;
+  --border-focus: #484f58;
+  --border-topbar: #777620;
+  --border-error-transparent: #f8514950;
+
+  /* ===== Text colors ===== */
+  --text-primary: #e0e0e0;
+  --text-secondary: #8b949e;
+  --text-muted: var(--border-focus); /* Same as border-focus */
+  --text-content: #c9d1d9;
+
+  /* ===== Accent colors ===== */
+  /* Blue */
+  --accent-blue: #58a6ff;
+  --accent-blue-light: #79c0ff;
+
+  /* Green */
+  --accent-green-dark: #238636;
+
+  /* Red */
+  --accent-red: #f85149;
+  --accent-red-light: #ff7b72;
+
+  /* Purple */
+  --accent-purple: #d2a8ff;
+
+  /* ===== Semantic colors ===== */
+  --color-success: var(--accent-green-dark);
+  --color-error: var(--accent-red);
+  --color-link: var(--accent-blue);
+  --color-keyword: var(--accent-red-light);
+  --color-function: var(--accent-purple);
+  --color-type: var(--accent-blue-light);
+
+  /* ===== Scrollbar ===== */
+  --scrollbar-thumb: var(--border-primary);
+  --scrollbar-thumb-hover: var(--border-focus);
+
+  /* ===== Toggle switch ===== */
+  --toggle-bg: var(--border-primary);
+  --toggle-bg-active: var(--accent-green-dark);
+  --toggle-knob: var(--border-focus);
+  --toggle-knob-active: var(--text-primary);
+
+  /* ===== Overlay ===== */
+  --overlay-bg: rgba(0, 0, 0, 0.7);
+  --modal-shadow: rgba(0, 0, 0, 0.5);
+}

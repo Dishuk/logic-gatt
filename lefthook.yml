@@ -1,0 +1,17 @@
+# Lefthook - Git hooks manager
+# Docs: https://github.com/evilmartians/lefthook
+
+pre-commit:
+  parallel: true
+  commands:
+    # ESLint for TypeScript/React files in frontend
+    eslint-frontend:
+      root: frontend
+      glob: "**/*.{ts,tsx}"
+      run: npx eslint --fix {staged_files} && git add {staged_files}
+
+    # Prettier for all frontend files
+    prettier-frontend:
+      root: frontend
+      glob: "**/*.{ts,tsx,json,css,md}"
+      run: npx prettier --write {staged_files} && git add {staged_files}

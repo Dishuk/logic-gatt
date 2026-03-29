@@ -1,0 +1,12 @@
+{
+  "id": "usb-ble",
+  "name": "USB BLE Dongle",
+  "version": "1.0.0",
+  "description": "Connect via USB Bluetooth dongle with local backend",
+  "icon": "bluetooth",
+  "color": "#3B82F6",
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "assets": ["python"]
+}

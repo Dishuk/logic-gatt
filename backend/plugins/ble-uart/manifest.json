@@ -1,0 +1,11 @@
+{
+  "id": "ble-uart",
+  "name": "BLE UART",
+  "version": "1.0.0",
+  "description": "Connect to BLE device via USB-UART adapter",
+  "icon": "usb",
+  "color": "#10B981",
+  "dependencies": {
+    "serialport": "^12.0.0"
+  }
+}

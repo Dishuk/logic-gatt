@@ -1,0 +1,19 @@
+{
+  "folders": [
+    { "path": ".", "name": "root" },
+    { "path": "frontend", "name": "frontend" },
+    { "path": "backend", "name": "backend" },
+    { "path": "shared", "name": "shared" },
+    { "path": "backend/plugins", "name": "plugins" },
+    { "path": "backend/plugins/ble-uart/misc/firmware", "name": "ble-uart-firmware" }
+  ],
+  "settings": {
+    "files.exclude": {
+      "frontend": true,
+      "backend": true,
+      "shared": true,
+      "backend/plugins": true,
+      "backend/plugins/ble-uart/misc/firmware": true
+    }
+  }
+}

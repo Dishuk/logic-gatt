@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+build/
+dist/
+*.tsbuildinfo
+backend/plugins/*/dist/
+
+# Python
+venv/
+__pycache__/
+
+# ESP32 firmware
+backend/plugins/ble-uart/misc/firmware/.pio/
+backend/plugins/ble-uart/misc/firmware/sdkconfig.*.old
+
+# Logs and environment
+*.log
+.env
+
+# Local files
+.local
+
+# Tool version managers
+.mise.local.toml
+
+# IDE
+.vscode/
+
