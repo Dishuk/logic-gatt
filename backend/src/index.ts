@@ -14,6 +14,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import { setupPluginRoutes } from './routes/plugins.js'
+import { setupPresetRoutes } from './routes/presets.js'
 import { setupSessionRoutes } from './routes/session.js'
 import { setupWebSocket } from './ws-handler.js'
 import { loadPlugins, unloadAllPlugins } from './plugin-loader.js'
@@ -39,6 +40,7 @@ async function main() {
 
   // API routes
   setupPluginRoutes(app)
+  setupPresetRoutes(app)
   setupSessionRoutes(app)
 
   // Serve frontend static files

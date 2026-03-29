@@ -3,22 +3,42 @@
  * Tests project state management, service operations, and import/export.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { renderHook, act, waitFor } from '@testing-library/react'
 import { useProject } from '../hooks/useProject'
 import { TriggerKind } from '../types'
 import type { Scenario } from '../types'
+import defaultProjectJson from './fixtures/defaultProject.json'
+
+// Mock fetch to return default preset
+const mockFetch = vi.fn()
 
 describe('useProject', () => {
   const mockLog = vi.fn()
 
   beforeEach(() => {
     mockLog.mockClear()
+    mockFetch.mockClear()
+    // Mock successful fetch of default preset
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(defaultProjectJson),
+    })
+    vi.stubGlobal('fetch', mockFetch)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   describe('initial state', () => {
-    it('should load default project on init', () => {
+    it('should load default project on init', async () => {
       const { result } = renderHook(() => useProject(mockLog))
+
+      // Wait for async loading to complete
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
 
       // Should have default services from defaultProject.json
       expect(result.current.services.length).toBeGreaterThan(0)
@@ -26,8 +46,12 @@ describe('useProject', () => {
       expect(result.current.variables.length).toBeGreaterThan(0)
     })
 
-    it('should have device settings', () => {
+    it('should have device settings', async () => {
       const { result } = renderHook(() => useProject(mockLog))
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
 
       expect(result.current.deviceSettings).toBeDefined()
       expect(result.current.deviceSettings.deviceName).toBeDefined()
@@ -40,11 +64,32 @@ describe('useProject', () => {
       expect(result.current.functionsRef).toBeDefined()
       expect(result.current.variablesRef).toBeDefined()
     })
+
+    it('should handle fetch failure gracefully', async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 500,
+      })
+
+      const { result } = renderHook(() => useProject(mockLog))
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
+      // Should start empty on error
+      expect(result.current.services.length).toBe(0)
+    })
   })
 
   describe('service management', () => {
-    it('should add a new service', () => {
+    it('should add a new service', async () => {
       const { result } = renderHook(() => useProject(mockLog))
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
       const initialCount = result.current.services.length
 
       act(() => {
@@ -54,8 +99,12 @@ describe('useProject', () => {
       expect(result.current.services.length).toBe(initialCount + 1)
     })
 
-    it('should not add more than 8 services', () => {
+    it('should not add more than 8 services', async () => {
       const { result } = renderHook(() => useProject(mockLog))
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
 
       // Add services until we hit the limit
       act(() => {
@@ -67,8 +116,13 @@ describe('useProject', () => {
       expect(result.current.services.length).toBeLessThanOrEqual(8)
     })
 
-    it('should update a service', () => {
+    it('should update a service', async () => {
       const { result } = renderHook(() => useProject(mockLog))
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
       const serviceId = result.current.services[0].id
       const newUuid = 'updated-uuid-12345678'
 
@@ -83,8 +137,13 @@ describe('useProject', () => {
       expect(updatedService?.uuid).toBe(newUuid)
     })
 
-    it('should remove a service', () => {
+    it('should remove a service', async () => {
       const { result } = renderHook(() => useProject(mockLog))
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
       const initialCount = result.current.services.length
       const serviceId = result.current.services[0].id
 
@@ -96,8 +155,12 @@ describe('useProject', () => {
       expect(result.current.services.find(s => s.id === serviceId)).toBeUndefined()
     })
 
-    it('should generate unique IDs for new services', () => {
+    it('should generate unique IDs for new services', async () => {
       const { result } = renderHook(() => useProject(mockLog))
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
 
       act(() => {
         result.current.addService()
@@ -226,8 +289,27 @@ describe('useProject', () => {
 describe('useProject edge cases', () => {
   const mockLog = vi.fn()
 
-  it('should handle updating non-existent service gracefully', () => {
+  beforeEach(() => {
+    mockLog.mockClear()
+    mockFetch.mockClear()
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(defaultProjectJson),
+    })
+    vi.stubGlobal('fetch', mockFetch)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('should handle updating non-existent service gracefully', async () => {
     const { result } = renderHook(() => useProject(mockLog))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
     const originalServices = [...result.current.services]
 
     act(() => {
@@ -243,8 +325,13 @@ describe('useProject edge cases', () => {
     expect(result.current.services.length).toBe(originalServices.length)
   })
 
-  it('should handle removing non-existent service gracefully', () => {
+  it('should handle removing non-existent service gracefully', async () => {
     const { result } = renderHook(() => useProject(mockLog))
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false)
+    })
+
     const originalCount = result.current.services.length
 
     act(() => {

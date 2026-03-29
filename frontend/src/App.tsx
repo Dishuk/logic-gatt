@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useLogger } from './hooks/useLogger'
 import { useProject } from './hooks/useProject'
 import { useTransport } from './hooks/useTransport'
@@ -9,21 +10,18 @@ import { Terminal } from './components/Terminal'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { importProject } from './lib/schemaIO'
 import { SchemaProvider } from './contexts'
-import defaultProjectJson from './data/defaultProject.json'
-import heartRateMonitorJson from './data/heartRateMonitor.json'
 
-const EXAMPLE_PROJECTS: ExampleProject[] = [
-  {
+// Preset metadata - maps API preset names to display info
+const PRESET_INFO: Record<string, { name: string; description: string }> = {
+  default: {
     name: 'Default (Echo)',
     description: 'Simple echo service with reader/writer examples',
-    data: defaultProjectJson,
   },
-  {
+  'heart-rate-monitor': {
     name: 'Heart Rate Monitor',
     description: 'BLE Heart Rate Profile (0x180D) with measurement, control point, and battery service',
-    data: heartRateMonitorJson,
   },
-]
+}
 
 export function App() {
   // Logging
@@ -36,6 +34,28 @@ export function App() {
   // Transport connection
   const transport = useTransport({ log: deviceLogger.log, fnLog: fnLogger.log })
 
+  // Example presets from backend
+  const [examples, setExamples] = useState<ExampleProject[]>([])
+
+  // Load preset list from backend
+  useEffect(() => {
+    async function loadPresetList() {
+      try {
+        const res = await fetch('/api/presets')
+        if (!res.ok) return
+        const { presets } = await res.json()
+        const exampleList: ExampleProject[] = presets.map((name: string) => {
+          const info = PRESET_INFO[name] ?? { name, description: '' }
+          return { name: info.name, description: info.description, data: name }
+        })
+        setExamples(exampleList)
+      } catch {
+        // Ignore errors, examples dropdown will just be empty
+      }
+    }
+    loadPresetList()
+  }, [])
+
   const handleUpload = () => {
     transport.handleUpload(project.services, project.deviceSettings, {
       getScenarios: () => project.scenariosRef.current,
@@ -45,9 +65,14 @@ export function App() {
     })
   }
 
-  const handleLoadExample = (example: ExampleProject) => {
+  const handleLoadExample = async (example: ExampleProject) => {
     try {
-      const data = importProject(JSON.stringify(example.data))
+      // example.data is now the preset name (string)
+      const presetName = example.data as string
+      const res = await fetch(`/api/presets/${presetName}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const json = await res.json()
+      const data = importProject(JSON.stringify(json))
       project.setDeviceSettings(data.deviceSettings)
       project.setServices(data.services)
       project.setFunctions(data.functions)
@@ -68,7 +93,7 @@ export function App() {
           project={project}
           logger={deviceLogger}
           onUpload={handleUpload}
-          examples={EXAMPLE_PROJECTS}
+          examples={examples}
           onLoadExample={handleLoadExample}
         />
         <div className="panels">

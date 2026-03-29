@@ -3,12 +3,11 @@
  * Handles services, functions, variables, tests, and scenarios.
  */
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { Schema, Service, UserFunction, UserVariable, UserTest, Scenario, DeviceSettings } from '../types'
 import type { ProjectData } from '../lib/schemaIO'
 import { importProject, downloadProject, pickAndImportProject, DEFAULT_DEVICE_SETTINGS } from '../lib/schemaIO'
 import { MAX_SERVICES } from '../lib/constants'
-import defaultProjectJson from '../data/defaultProject.json'
 
 function genId() {
   return crypto.randomUUID()
@@ -18,21 +17,38 @@ function createEmptyService(): Service {
   return { id: genId(), uuid: '', tag: '', characteristics: [] }
 }
 
-function loadDefaultProject(): ProjectData {
-  return importProject(JSON.stringify(defaultProjectJson))
+function emptyProject(): ProjectData {
+  return {
+    deviceSettings: { ...DEFAULT_DEVICE_SETTINGS },
+    services: [],
+    functions: [],
+    variables: [],
+    tests: [],
+    scenarios: [],
+  }
 }
 
 export function useProject(log: (msg: string) => void) {
-  const defaultData = loadDefaultProject()
+  const [isLoading, setIsLoading] = useState(true)
+  const [project, setProject] = useState<ProjectData>(emptyProject)
 
-  const [deviceSettings, setDeviceSettings] = useState<DeviceSettings>(
-    defaultData.deviceSettings ?? DEFAULT_DEVICE_SETTINGS
-  )
-  const [services, setServices] = useState<Schema>(defaultData.services)
-  const [functions, setFunctions] = useState<UserFunction[]>(defaultData.functions)
-  const [variables, setVariables] = useState<UserVariable[]>(defaultData.variables)
-  const [tests, setTests] = useState<UserTest[]>(defaultData.tests)
-  const [scenarios, setScenarios] = useState<Scenario[]>(defaultData.scenarios)
+  // Destructure for convenience
+  const { deviceSettings, services, functions, variables, tests, scenarios } = project
+
+  // Load default preset from backend on mount
+  useEffect(() => {
+    fetch('/api/presets/default')
+      .then(res => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
+      .then(json => {
+        setProject(importProject(JSON.stringify(json)))
+        log('Default project loaded')
+      })
+      .catch(err => {
+        console.error('Failed to load default preset:', err)
+        log('Failed to load default preset, starting empty')
+      })
+      .finally(() => setIsLoading(false))
+  }, [])
 
   // Refs for runtime access to latest state
   const scenariosRef = useRef(scenarios)
@@ -41,6 +57,14 @@ export function useProject(log: (msg: string) => void) {
   functionsRef.current = functions
   const variablesRef = useRef(variables)
   variablesRef.current = variables
+
+  // Setters that update individual parts of project
+  const setDeviceSettings = (ds: DeviceSettings) => setProject(p => ({ ...p, deviceSettings: ds }))
+  const setServices = (s: Schema) => setProject(p => ({ ...p, services: s }))
+  const setFunctions = (f: UserFunction[]) => setProject(p => ({ ...p, functions: f }))
+  const setVariables = (v: UserVariable[]) => setProject(p => ({ ...p, variables: v }))
+  const setTests = (t: UserTest[]) => setProject(p => ({ ...p, tests: t }))
+  const setScenarios = (s: Scenario[]) => setProject(p => ({ ...p, scenarios: s }))
 
   // Service management
   function addService() {
@@ -59,15 +83,10 @@ export function useProject(log: (msg: string) => void) {
   // Import/Export
   async function handleImport() {
     try {
-      const project = await pickAndImportProject()
-      setDeviceSettings(project.deviceSettings)
-      setServices(project.services)
-      if (project.functions.length > 0) setFunctions(project.functions)
-      if (project.variables.length > 0) setVariables(project.variables)
-      if (project.tests.length > 0) setTests(project.tests)
-      if (project.scenarios.length > 0) setScenarios(project.scenarios)
+      const imported = await pickAndImportProject()
+      setProject(imported)
       log(
-        `Imported: ${project.services.length} service(s), ${project.functions.length} function(s), ${project.variables.length} variable(s), ${project.tests.length} test(s), ${project.scenarios.length} scenario(s)`
+        `Imported: ${imported.services.length} service(s), ${imported.functions.length} function(s), ${imported.variables.length} variable(s), ${imported.tests.length} test(s), ${imported.scenarios.length} scenario(s)`
       )
     } catch (err) {
       if ((err as Error).message !== 'No file selected') {
@@ -77,12 +96,13 @@ export function useProject(log: (msg: string) => void) {
   }
 
   function handleExport() {
-    downloadProject({ deviceSettings, services, functions, variables, tests, scenarios })
+    downloadProject(project)
     log('Project exported')
   }
 
   return {
     // State
+    isLoading,
     deviceSettings,
     services,
     functions,
