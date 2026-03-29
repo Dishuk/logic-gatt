@@ -176,10 +176,30 @@ describe('validateDeviceSettings', () => {
 
 describe('validateWsCommand', () => {
   it('should accept valid command types', () => {
-    for (const type of VALID_COMMAND_TYPES) {
-      const result = validateWsCommand({ type })
-      expect(result.valid).toBe(true)
-    }
+    // Commands with no extra fields
+    expect(validateWsCommand({ type: 'connect' }).valid).toBe(true)
+    expect(validateWsCommand({ type: 'disconnect' }).valid).toBe(true)
+
+    // Commands requiring additional fields
+    expect(validateWsCommand({
+      type: 'upload-schema',
+      schema: { services: [] },
+      settings: { deviceName: 'Test' },
+    }).valid).toBe(true)
+
+    expect(validateWsCommand({
+      type: 'notify',
+      serviceUuid: '0000180f-0000-1000-8000-00805f9b34fb',
+      charUuid: '00002a19-0000-1000-8000-00805f9b34fb',
+      data: [0x64],
+    }).valid).toBe(true)
+
+    expect(validateWsCommand({
+      type: 'respond-to-read',
+      serviceUuid: '0000180f-0000-1000-8000-00805f9b34fb',
+      charUuid: '00002a19-0000-1000-8000-00805f9b34fb',
+      data: [],
+    }).valid).toBe(true)
   })
 
   it('should reject invalid command type', () => {
