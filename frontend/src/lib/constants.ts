@@ -1,6 +1,6 @@
 /**
  * Shared constants for BLE schema limits and advertising constraints.
- * These apply across all transport plugins (ESP32 constraints are the most restrictive).
+ * These apply across all transport plugins (ble-uart plugin constraints are the most restrictive).
  */
 
 // BLE advertising packet constraints

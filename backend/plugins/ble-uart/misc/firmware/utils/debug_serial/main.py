@@ -3,7 +3,7 @@ import time
 import serial
 
 port = sys.argv[1] if len(sys.argv) > 1 else "COM1"
-ser = serial.Serial(port, 460800, timeout=0.01)
+ser = serial.Serial(port, 115200, timeout=0.01)
 
 while True:
     n = ser.in_waiting

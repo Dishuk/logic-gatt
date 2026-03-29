@@ -6,11 +6,11 @@ The Logic Constructor turns the frontend into a programmable "brain" for the BLE
 
 ```
 BLE Write (Char A)
-  → UART → Frontend
+  → Backend Plugin → Frontend
   → Scenario triggers
   → User function(s) execute
   → Result stored in variable / sent as notification (Char B)
-  → UART → ESP32 → BLE Notify
+  → Backend Plugin → BLE Notify
 ```
 
 ## Scripting Language
@@ -19,7 +19,7 @@ User-defined function bodies are written in **TypeScript**. The frontend compile
 
 If TypeScript proves problematic (bundle size, edge-case transpilation issues), the fallback is plain JavaScript — the runtime sandbox accepts JS directly, so dropping TS only removes the transpile step.
 
-**Key constraint:** All scenario logic executes in the browser as JS/TS. The ESP32 firmware is not modified to run scripts — it only forwards data over UART.
+**Key constraint:** All scenario logic executes in the browser as JS/TS. The backend plugin handles BLE communication — it receives events and sends commands but does not execute scenario logic.
 
 ## Core Concepts
 
@@ -328,9 +328,9 @@ interface Scenario {
 ## Runtime Execution Model
 
 1. **Schema load** — All variables are initialized to their `initialValue`. Scenarios with `startup` triggers fire.
-2. **UART message arrives** — The frontend identifies which service/characteristic the message targets and finds all enabled scenarios whose trigger matches.
+2. **BLE event arrives** — The backend plugin forwards characteristic reads/writes to the frontend, which identifies matching scenarios.
 3. **Pipeline execution** — Steps run sequentially within the scenario. The buffer flows from step to step. Errors in a step halt the pipeline and log to the terminal.
-4. **Notify steps** — Serialize the buffer into a UART frame addressed to the target characteristic and send it to the ESP32.
+4. **Notify steps** — Send the buffer to the backend plugin, which transmits it as a BLE notification on the target characteristic.
 5. **Multiple scenarios** — If multiple scenarios match the same trigger, they execute in definition order, each receiving a **copy** of the original input buffer (they do not chain).
 
 ## UI Layout
@@ -402,23 +402,6 @@ Functions, variables, tests, and scenarios are included in the exported JSON alo
 ```
 
 Import detects the old format (bare `Service[]` array) for backward compatibility.
-
-## UART Protocol Additions
-
-The existing protocol (commands `0x01`–`0x03`, `0x10`, `0x11`) handles schema upload. Runtime data exchange uses a separate set of commands:
-
-| Cmd    | Name             | Direction        | Payload                        |
-| ------ | ---------------- | ---------------- | ------------------------------ |
-| `0x20` | CHAR_WRITE_EVENT | ESP32 → Frontend | `[svc_idx][char_idx][data...]` |
-| `0x21` | CHAR_READ_EVENT  | ESP32 → Frontend | `[svc_idx][char_idx]`          |
-| `0x22` | NOTIFY_CMD       | Frontend → ESP32 | `[svc_idx][char_idx][data...]` |
-| `0x23` | READ_RESPONSE    | Frontend → ESP32 | `[svc_idx][char_idx][data...]` |
-| `0x30` | PING             | Frontend → ESP32 | `[schema_hash (4 bytes)]`      |
-| `0x31` | PONG             | ESP32 → Frontend | `[schema_hash (4 bytes)]`      |
-
-Note: Data length is implicit in the frame's LEN field (payload length - 2 for the index bytes).
-
-All frames use the same `[0xAA][CMD][LEN][PAYLOAD][CRC8]` envelope as existing commands.
 
 ## Security Considerations
 

@@ -21,7 +21,7 @@ LogicGATT uses a plugin architecture to support different BLE connectivity backe
              └──────┬──────┘                  └──────┬──────┘                  └─────────────┘
                     │                                │
              ┌──────▼──────┐                  ┌──────▼──────┐
-             │    ESP32    │                  │   Python    │
+             │     MCU     │                  │   Python    │
              │  (serial)   │                  │  (WinRT)    │
              └──────┬──────┘                  └──────┬──────┘
                     │                                │
@@ -143,7 +143,11 @@ Dependencies are automatically merged into `backend/package.json` during `make i
 
 ## Quick Start
 
-### BLE UART (ESP32)
+### BLE UART
+
+The ble-uart plugin communicates with any MCU over USB-UART serial. An ESP32 reference firmware is included.
+
+**Using the reference ESP32 firmware:**
 
 ```bash
 cd backend/plugins/ble-uart/misc/firmware
@@ -154,15 +158,9 @@ pio run -t upload
 # Then in the frontend, select "BLE UART" and pick the serial port
 ```
 
-**Hardware wiring:**
+**ESP32 wiring:** Uses UART0 on default pins (GPIO 1 TX, GPIO 3 RX). Connect via USB.
 
-| ESP32 Pin | Function |
-|-----------|----------|
-| GPIO 16 | UART RX (→ adapter TX) |
-| GPIO 17 | UART TX (→ adapter RX) |
-| GND | Common ground |
-
-Baud rate: 460800. Protocol docs: [ble-uart/misc/firmware/docs/](ble-uart/misc/firmware/docs/)
+**Porting to other MCUs:** Implement the UART protocol (115200 baud, 8N1). See [ble-uart/misc/firmware/docs/](ble-uart/misc/firmware/docs/) for protocol specification.
 
 ### USB BLE (PC Adapter)
 

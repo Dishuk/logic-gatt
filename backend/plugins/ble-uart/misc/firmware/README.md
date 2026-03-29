@@ -27,10 +27,9 @@ pio run --target upload
 | Setting | Value |
 |---------|-------|
 | Board | ESP32 DevKit |
-| UART2 TX | GPIO 17 |
-| UART2 RX | GPIO 16 |
-| UART2 baud | 460800 (protocol communication with frontend) |
-| Serial monitor | 115200 (debug console output) |
+| UART0 TX | GPIO 1 (default) |
+| UART0 RX | GPIO 3 (default) |
+| Baud rate | 115200 |
 | BLE name | "logic-gatt-emu" |
 | Upload port | COM8 (edit `platformio.ini` to change) |
 
@@ -56,7 +55,7 @@ src/
 ├── app.c              # Init orchestrator (NVS, BLE, UART)
 ├── protocol.c         # Frame parsing, CRC-8, command dispatch
 ├── schema_service.c   # Dynamic GATT schema management
-├── uart_service.c     # UART2 driver with RX task
+├── uart_service.c     # UART0 driver with RX task
 └── ble_service/
     └── ble_server.c   # NimBLE stack wrapper, advertising
 ```

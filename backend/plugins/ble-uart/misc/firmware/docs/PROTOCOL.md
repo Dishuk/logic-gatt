@@ -2,7 +2,7 @@
 
 ## Frame Format
 
-All communication between the frontend/script and the ESP32 firmware uses this frame format:
+All communication between the frontend/backend and the MCU firmware uses this frame format:
 
 ```
 ┌───────┬─────┬─────┬─────────────────┬──────┐

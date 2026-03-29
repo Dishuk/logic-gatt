@@ -1,6 +1,6 @@
 # Debug Serial Utility
 
-Simple Python script that echoes UART data at 460800 baud. Useful for testing the ESP32 firmware without the full frontend.
+Simple Python script that echoes UART data at 115200 baud. Useful for testing the ESP32 firmware without the full frontend.
 
 ## Setup
 
