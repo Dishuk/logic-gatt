@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "lefthook": "^1.13.4"
+    "lefthook": "^2.1.0"
   }
 }

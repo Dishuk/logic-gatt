@@ -192,13 +192,13 @@ export interface ValidationResult {
 /**
  * Convert Zod parse result to ValidationResult format
  */
-export function zodToValidationResult<T>(result: z.SafeParseReturnType<unknown, T>): ValidationResult {
+export function zodToValidationResult<T>(result: z.ZodSafeParseResult<T>): ValidationResult {
   if (result.success) {
     return { valid: true, errors: [] }
   }
   return {
     valid: false,
-    errors: result.error.issues.map((issue) => {
+    errors: result.error.issues.map((issue: z.core.$ZodIssue) => {
       const path = issue.path.length > 0 ? `${issue.path.join('.')}: ` : ''
       return `${path}${issue.message}`
     }),
