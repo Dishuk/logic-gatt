@@ -333,6 +333,8 @@ const pendingRequests = new Map<
     resolve: (result: ExecutionResult) => void
     reject: (error: Error) => void
     timeoutId: ReturnType<typeof setTimeout>
+    log: (msg: string) => void
+    functionName: string
   }
 >()
 
@@ -347,8 +349,18 @@ function getWorker(): Worker {
       clearTimeout(pending.timeoutId)
       pendingRequests.delete(response.id)
 
+      // Process logs from this execution
+      for (const log of response.logs) {
+        pending.log(log.message)
+      }
+
       if (response.error) {
-        pending.reject(new Error(response.error))
+        pending.log(`Error in "${pending.functionName}": ${response.error}`)
+        pending.resolve({
+          output: null,
+          variableUpdates: [],
+          scenarioRequests: [],
+        })
       } else {
         pending.resolve({
           output: response.result ? new Uint8Array(response.result) : null,
@@ -363,6 +375,7 @@ function getWorker(): Worker {
       // Reject all pending requests
       for (const [, pending] of pendingRequests) {
         clearTimeout(pending.timeoutId)
+        pending.log(`Error in "${pending.functionName}": Worker error: ${error.message}`)
         pending.reject(new Error(`Worker error: ${error.message}`))
       }
       pendingRequests.clear()
@@ -399,16 +412,8 @@ export async function executeFunction(
   return new Promise(resolve => {
     const w = getWorker()
 
-    // Intercept logs by attaching a temporary handler
-    const originalOnMessage = w.onmessage
-
-    const restoreHandler = () => {
-      w.onmessage = originalOnMessage
-    }
-
     const timeoutId = setTimeout(() => {
       pendingRequests.delete(id)
-      restoreHandler()
       terminateWorker()
       ctx.log(`Error in "${fn.name}": Execution timed out after ${EXECUTION_TIMEOUT_MS / 1000}s`)
       resolve({ output: null, scenarioRequests: [] })
@@ -416,8 +421,6 @@ export async function executeFunction(
 
     pendingRequests.set(id, {
       resolve: result => {
-        restoreHandler()
-
         // Apply variable updates
         if (result.variableUpdates.length > 0) {
           const updated = [...variables]
@@ -432,27 +435,13 @@ export async function executeFunction(
 
         resolve({ output: result.output, scenarioRequests: result.scenarioRequests })
       },
-      reject: error => {
-        restoreHandler()
-        ctx.log(`Error in "${fn.name}": ${error.message}`)
+      reject: () => {
         resolve({ output: null, scenarioRequests: [] })
       },
       timeoutId,
+      log: ctx.log,
+      functionName: fn.name,
     })
-
-    w.onmessage = (event: MessageEvent<WorkerResponse>) => {
-      const response = event.data
-      if (response.id === id) {
-        // Log all messages from this execution
-        for (const log of response.logs) {
-          ctx.log(log.message)
-        }
-      }
-      // Call original handler
-      if (originalOnMessage) {
-        originalOnMessage.call(w, event)
-      }
-    }
 
     w.postMessage(request)
   })
