@@ -9,7 +9,6 @@ import {
   type UserFunction,
   type Characteristic,
 } from '../types'
-import { useSchema } from '../contexts'
 import { Card, CardHeader, CardBody } from './Card'
 import { X, GripVertical, Play } from 'lucide-react'
 import type { DragEndEvent } from '@dnd-kit/core'
@@ -28,6 +27,8 @@ interface ScenariosPanelProps {
   onScenariosChange: (scenarios: Scenario[]) => void
   onRunScenario?: (scenario: Scenario) => void
   isRunning?: boolean
+  services: Schema
+  functions: UserFunction[]
 }
 
 // --- Validation ---
@@ -155,12 +156,13 @@ function TriggerEditor({
   trigger,
   onChange,
   error,
+  services,
 }: {
   trigger: Trigger
   onChange: (t: Trigger) => void
   error?: string
+  services: Schema
 }) {
-  const { services } = useSchema()
   return (
     <div className="scenario-section">
       <div className="scenario-section-title">
@@ -252,6 +254,8 @@ function SortableStepRow({
   onChange,
   onRemove,
   error,
+  services,
+  functions,
 }: {
   step: Step
   stepId: string
@@ -259,8 +263,9 @@ function SortableStepRow({
   onChange: (s: Step) => void
   onRemove: () => void
   error?: string
+  services: Schema
+  functions: UserFunction[]
 }) {
-  const { services, functions } = useSchema()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: stepId })
 
   const style = {
@@ -358,6 +363,8 @@ interface ScenarioCardProps {
   onRemove: () => void
   onRun?: () => void
   canRun?: boolean
+  services: Schema
+  functions: UserFunction[]
 }
 
 function SortableScenarioCard({
@@ -367,6 +374,8 @@ function SortableScenarioCard({
   onRemove,
   onRun,
   canRun,
+  services,
+  functions,
 }: ScenarioCardProps) {
   const [collapsed, setCollapsed] = useState(true)
   const errored = hasErrors(errors)
@@ -465,6 +474,7 @@ function SortableScenarioCard({
               trigger={scenario.trigger}
               onChange={trigger => onChange({ ...scenario, trigger })}
               error={errors.trigger}
+              services={services}
             />
             <div className="scenario-section">
               <div className="scenario-section-title">Steps</div>
@@ -479,6 +489,8 @@ function SortableScenarioCard({
                       onChange={s => updateStep(i, s)}
                       onRemove={() => removeStep(i)}
                       error={errors.steps[i]}
+                      services={services}
+                      functions={functions}
                     />
                   ))}
                 </SortableContext>
@@ -500,8 +512,9 @@ export function ScenariosPanel({
   onScenariosChange,
   onRunScenario,
   isRunning,
+  services,
+  functions,
 }: ScenariosPanelProps) {
-  const { services, functions } = useSchema()
   const allErrors = useMemo(() => {
     const map = new Map<string, ScenarioErrors>()
     for (const s of scenarios) {
@@ -558,6 +571,8 @@ export function ScenariosPanel({
               onRemove={() => removeScenario(s.id)}
               onRun={() => onRunScenario?.(s)}
               canRun={isRunning}
+              services={services}
+              functions={functions}
             />
           ))}
         </SortableContext>

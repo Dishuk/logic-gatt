@@ -9,7 +9,6 @@ import { CodeEditorPanel } from './components/CodeEditorPanel'
 import { Terminal } from './components/Terminal'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { importProject } from './lib/schemaIO'
-import { SchemaProvider } from './contexts'
 
 // Preset metadata - maps API preset names to display info
 const PRESET_INFO: Record<string, { name: string; description: string }> = {
@@ -98,9 +97,7 @@ export function App() {
         />
         <div className="panels">
           <ServicesPanel project={project} />
-          <SchemaProvider services={project.services} functions={project.functions}>
-            <CodeEditorPanel project={project} fnLogger={fnLogger} transport={transport} />
-          </SchemaProvider>
+          <CodeEditorPanel project={project} fnLogger={fnLogger} transport={transport} />
         </div>
         <Terminal deviceLogger={deviceLogger} fnLogger={fnLogger} />
       </div>

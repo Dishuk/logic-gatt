@@ -8,7 +8,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import type { UserFunction, UserVariable, UserTest, Scenario, Schema } from '../types'
 import { SettingsProvider } from '../hooks/useSettings'
-import { SchemaProvider } from '../contexts'
 
 // Mock CodeMirror hook since it requires browser APIs
 vi.mock('../hooks/useCodeMirror', () => ({
@@ -27,6 +26,7 @@ vi.mock('../themes', () => ({
 import { CodeEditorPanel } from '../components/CodeEditorPanel'
 
 function createDefaultProps(overrides: {
+  services?: Schema
   functions?: UserFunction[]
   variables?: UserVariable[]
   tests?: UserTest[]
@@ -39,6 +39,7 @@ function createDefaultProps(overrides: {
 } = {}) {
   return {
     project: {
+      services: overrides.services ?? ([] as Schema),
       functions: overrides.functions ?? ([] as UserFunction[]),
       variables: overrides.variables ?? ([] as UserVariable[]),
       tests: overrides.tests ?? ([] as UserTest[]),
@@ -58,14 +59,8 @@ function createDefaultProps(overrides: {
   }
 }
 
-function renderWithSettings(ui: React.ReactElement, services: Schema = [], functions: UserFunction[] = []) {
-  return render(
-    <SettingsProvider>
-      <SchemaProvider services={services} functions={functions}>
-        {ui}
-      </SchemaProvider>
-    </SettingsProvider>
-  )
+function renderWithSettings(ui: React.ReactElement) {
+  return render(<SettingsProvider>{ui}</SettingsProvider>)
 }
 
 describe('CodeEditorPanel', () => {

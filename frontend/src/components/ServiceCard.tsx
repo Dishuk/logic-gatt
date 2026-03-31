@@ -3,13 +3,13 @@ import type { Service, Characteristic } from '../types'
 import { Card, CardHeader, CardBody } from './Card'
 import { CharacteristicRow } from './CharacteristicRow'
 import { UuidInput } from './UuidInput'
-import { useValidation } from '../contexts'
 import { MAX_CHARS_PER_SERVICE } from '../lib/constants'
 
 interface ServiceCardProps {
   service: Service
   onChange: (service: Service) => void
   onRemove: () => void
+  dupUuids: Set<string>
 }
 
 function createCharacteristic(): Characteristic {
@@ -22,8 +22,7 @@ function createCharacteristic(): Characteristic {
   }
 }
 
-export function ServiceCard({ service, onChange, onRemove }: ServiceCardProps) {
-  const { dupUuids } = useValidation()
+export function ServiceCard({ service, onChange, onRemove, dupUuids }: ServiceCardProps) {
   const [collapsed, setCollapsed] = useState(false)
 
   function addCharacteristic() {
@@ -75,6 +74,7 @@ export function ServiceCard({ service, onChange, onRemove }: ServiceCardProps) {
               characteristic={char}
               onChange={updated => updateCharacteristic(char.id, updated)}
               onRemove={() => removeCharacteristic(char.id)}
+              dupUuids={dupUuids}
             />
           ))}
           {service.characteristics.length < MAX_CHARS_PER_SERVICE && (

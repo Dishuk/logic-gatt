@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
-import type { UserFunction, UserVariable, UserTest, VarType, Scenario } from '../types'
+import type { UserFunction, UserVariable, UserTest, VarType, Scenario, Schema } from '../types'
 import { useCodeMirror } from '../hooks/useCodeMirror'
 import { useSettings } from '../hooks/useSettings'
 import { createCompletionSource } from '../lib/completions'
@@ -81,6 +81,7 @@ function ThemePreview({ theme }: { theme: Extension }) {
 
 interface CodeEditorPanelProps {
   project: {
+    services: Schema
     functions: UserFunction[]
     variables: UserVariable[]
     tests: UserTest[]
@@ -246,7 +247,7 @@ function findDuplicateNames(items: { name: string }[]): Set<string> {
 }
 
 export function CodeEditorPanel({ project, fnLogger, transport }: CodeEditorPanelProps) {
-  const { functions, variables, tests, scenarios, setFunctions, setVariables, setTests, setScenarios } = project
+  const { services, functions, variables, tests, scenarios, setFunctions, setVariables, setTests, setScenarios } = project
   const { log: fnLog } = fnLogger
   const { runScenario, running } = transport
   const { settings, setSetting } = useSettings()
@@ -325,6 +326,8 @@ export function CodeEditorPanel({ project, fnLogger, transport }: CodeEditorPane
               onScenariosChange={setScenarios}
               onRunScenario={runScenario}
               isRunning={running}
+              services={services}
+              functions={functions}
             />
           </div>
           <div style={{ display: tab === 'functions' ? undefined : 'none' }}>
