@@ -8,7 +8,6 @@ NimBLE GATT server that receives schema definitions from the frontend over UART 
 
 - [PlatformIO CLI](https://platformio.org/install/cli) or VS Code with PlatformIO extension
 - ESP32 DevKit board
-- USB cable
 
 ## Setup
 
@@ -31,7 +30,24 @@ pio run --target upload
 | UART0 RX | GPIO 3 (default) |
 | Baud rate | 115200 |
 | BLE name | "logic-gatt-emu" |
-| Upload port | COM8 (edit `platformio.ini` to change) |
+
+### Serial Port
+
+PlatformIO auto-detects the port in most cases. To specify manually:
+
+```bash
+# Command line
+pio run -t upload --upload-port COM3
+pio device monitor --port COM3
+```
+
+Or create `platformio_override.ini` (gitignored):
+
+```ini
+[env:esp32dev]
+upload_port = COM3
+monitor_port = COM3
+```
 
 ## Build Commands
 
@@ -67,7 +83,8 @@ The UART transport protocol is implemented as a separate reusable library in `..
 
 ## Documentation
 
-- [docs/PROTOCOL.md](docs/PROTOCOL.md) — UART protocol specification
+- [../uart_transport_protocol/PROTOCOL.md](../uart_transport_protocol/PROTOCOL.md) — UART protocol specification
+- [../uart_transport_protocol/README.md](../uart_transport_protocol/README.md) — Transport library API
 
 ## Debug Serial Utility
 

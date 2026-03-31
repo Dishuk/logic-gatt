@@ -12,7 +12,7 @@ Shared TypeScript types used by frontend, backend, and plugins.
 ## Usage
 
 ```typescript
-import { Schema, PluginEvent, PluginBase } from 'logic-gatt-shared'
+import { Schema, PluginEvent, PluginBase } from '@logic-gatt/shared'
 ```
 
 ## Setup

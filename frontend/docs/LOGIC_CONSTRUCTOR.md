@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Logic Constructor turns the frontend into a programmable "brain" for the BLE device. Users build **scenarios** — event-driven pipelines that define how the device reacts to BLE reads, writes, and timers. Data flows through user-defined **functions**, is stored in **variables**, and results are sent back as BLE notifications.
+The Logic Constructor turns the frontend into a programmable "brain" for the BLE device. **Scenarios** are event-driven pipelines that define how the device reacts to BLE reads, writes, and timers. Data flows through **functions**, gets stored in **variables**, and results are sent back as BLE notifications.
 
 ```
 BLE Write (Char A)
@@ -15,17 +15,17 @@ BLE Write (Char A)
 
 ## Scripting Language
 
-User-defined function bodies are written in **TypeScript**. The frontend compiles TS to JS at runtime using the browser-bundled TypeScript compiler (`typescript` npm package, `ts.transpileModule`). This gives users type safety and autocomplete in the code editor at near-zero cost — the compiler is ~2 MB gzipped and transpilation of small function bodies is effectively instant.
+Function bodies are written in **TypeScript**. The frontend compiles TS to JS at runtime using the browser-bundled TypeScript compiler (`typescript` npm package, `ts.transpileModule`). This provides type safety and autocomplete in the code editor at near-zero cost — the compiler is ~2 MB gzipped and transpiling small function bodies is basically instant.
 
-If TypeScript proves problematic (bundle size, edge-case transpilation issues), the fallback is plain JavaScript — the runtime sandbox accepts JS directly, so dropping TS only removes the transpile step.
+If TypeScript causes issues (bundle size, edge-case transpilation bugs), plain JavaScript works too — the runtime sandbox accepts JS directly, so dropping TS just removes the transpile step.
 
-**Key constraint:** All scenario logic executes in the browser as JS/TS. The backend plugin handles BLE communication — it receives events and sends commands but does not execute scenario logic.
+**Key point:** All scenario logic runs in the browser as JS/TS. The backend plugin handles BLE communication — it receives events and sends commands but never executes scenario logic.
 
 ## Core Concepts
 
 ### Variables
 
-Global named byte buffers accessible from any function or scenario. **Variables must be declared in the UI before they can be used.** Calling `setVar()` or `getVar()` with an undeclared name throws a runtime error. This keeps all state visible in the variable table — no hidden runtime variables.
+Global named byte buffers accessible from any function or scenario. **Variables must be declared in the UI before use.** Calling `setVar()` or `getVar()` with an undeclared name throws a runtime error — this keeps all state visible in the variable table with no hidden runtime surprises.
 
 | Field          | Type                                          | Description                                                                    |
 | -------------- | --------------------------------------------- | ------------------------------------------------------------------------------ |
@@ -35,26 +35,26 @@ Global named byte buffers accessible from any function or scenario. **Variables 
 
 #### Creation Flow (UI)
 
-1. User opens the **Variables** tab in the right panel.
-2. Clicks the **"+ Add Variable"** button at the bottom of the variable table.
+1. Open the **Variables** tab in the right panel.
+2. Click **"+ Add Variable"** at the bottom of the table.
 3. A new row appears with empty fields:
    - **Name** — text input. Must be unique, non-empty, valid identifier (letters, digits, underscores).
-   - **Type** — dropdown: `hex`, `u8`, `u16`, `u32`, `string`. Defaults to `hex`. This affects only how the value is displayed/edited in the UI (e.g. `u16` shows a decimal number input instead of raw hex). At runtime all variables are stored as `Uint8Array`.
+   - **Type** — dropdown: `hex`, `u8`, `u16`, `u32`, `string`. Defaults to `hex`. This only affects how the value is displayed/edited in the UI (e.g. `u16` shows a decimal number input instead of raw hex). At runtime all variables are stored as `Uint8Array`.
    - **Initial Value** — hex byte input (same component used for characteristic default values), or a typed input matching the selected type (e.g. a number field for `u16`).
 4. The variable is immediately usable in function bodies via `getVar("name")` / `setVar("name", ...)`.
-5. User can delete a variable via the row's delete button. Deleting a variable that is referenced by functions or pipeline steps shows a warning.
+5. Deleting a variable that's referenced by functions or pipeline steps shows a warning.
 
 #### Runtime Behaviour
 
 - All variables live in a single flat namespace (`Map<string, Uint8Array>`).
-- On schema load (or reset), every variable is initialized to its `initialValue`.
-- A variable's value persists across scenario invocations until explicitly overwritten or the schema is reset.
-- Variables are the **only** way to share state between scenarios (there is no implicit shared memory).
-- The variable table shows both **initial** and **current runtime** values side by side. When the current value differs from the initial value, the current value cell is highlighted (e.g. subtle background color change) so the user can immediately spot modified state. A reset button per variable (or a global "reset all") restores current values back to their initial values.
+- On schema load (or reset), every variable resets to its `initialValue`.
+- Values persist across scenario invocations until explicitly overwritten or the schema is reset.
+- Variables are the **only** way to share state between scenarios — no implicit shared memory.
+- The variable table shows both **initial** and **current runtime** values side by side. When the current value differs from initial, the cell is highlighted (subtle background color change) so modified state is easy to spot. A reset button per variable (or a global "reset all") restores values to their initial state.
 
 ### Functions
 
-Reusable blocks of TypeScript logic. Every function has a **uniform signature**: it accepts a single `Uint8Array` and returns a `Uint8Array`. This is a deliberate constraint — the tool's purpose is BLE behavior emulation, not general-purpose programming. Keeping a single fixed signature means functions compose naturally in pipelines and there are no type-mismatch issues.
+Reusable blocks of TypeScript logic. Every function has a **uniform signature**: takes a single `Uint8Array` and returns a `Uint8Array`. This is intentional — the tool is for BLE behavior emulation, not general-purpose programming. A fixed signature means functions compose naturally in pipelines without type-mismatch headaches.
 
 When a function needs additional data beyond the input buffer, it reads global variables via `getVar()`.
 
@@ -198,10 +198,10 @@ Steps execute sequentially. Each step receives the output of the previous step a
 | Step type       | Fields                    | Behaviour                                                                                                                                                                                                                                              |
 | --------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `call-function` | `functionName`            | Calls a user function with current buffer as `input`; output becomes next input                                                                                                                                                                        |
-| `notify`        | `serviceUuid`, `charUuid` | Sends current buffer as a BLE notification on the specified characteristic; passes buffer through. The UI auto-suggests valid service/characteristic pairs from the current schema. Validates that the characteristic has the NOTIFY property enabled. |
+| `notify`        | `serviceUuid`, `charUuid` | Sends current buffer as a BLE notification on the specified characteristic; passes buffer through unchanged. The UI auto-suggests valid service/characteristic pairs from the schema. Also validates that the characteristic has NOTIFY enabled. |
 | `respond`       | —                         | Uses current buffer as the read-response value (only valid for `char-read` triggers)                                                                                                                                                                   |
 
-Variable access (`getVar`/`setVar`), conditionals, and logging are handled inside user functions rather than as separate pipeline steps. This keeps the pipeline simple while giving full flexibility in code. Use `ctx.runScenario(name)` to chain scenarios together for complex workflows.
+Variable access (`getVar`/`setVar`), conditionals, and logging happen inside functions rather than as separate pipeline steps. This keeps pipelines simple while still allowing full flexibility in code. `ctx.runScenario(name)` can chain scenarios together for more complex workflows.
 
 ### Example Scenario
 
@@ -327,11 +327,11 @@ interface Scenario {
 
 ## Runtime Execution Model
 
-1. **Schema load** — All variables are initialized to their `initialValue`. Scenarios with `startup` triggers fire.
-2. **BLE event arrives** — The backend plugin forwards characteristic reads/writes to the frontend, which identifies matching scenarios.
-3. **Pipeline execution** — Steps run sequentially within the scenario. The buffer flows from step to step. Errors in a step halt the pipeline and log to the terminal.
+1. **Schema load** — All variables are set to their `initialValue`. Scenarios with `startup` triggers fire.
+2. **BLE event arrives** — The backend plugin forwards characteristic reads/writes to the frontend, which finds matching scenarios.
+3. **Pipeline execution** — Steps run sequentially. The buffer flows from step to step. Errors halt the pipeline and log to the terminal.
 4. **Notify steps** — Send the buffer to the backend plugin, which transmits it as a BLE notification on the target characteristic.
-5. **Multiple scenarios** — If multiple scenarios match the same trigger, they execute in definition order, each receiving a **copy** of the original input buffer (they do not chain).
+5. **Multiple scenarios** — If multiple scenarios match the same trigger, they run in definition order, each getting a **copy** of the original input buffer (they don't chain).
 
 ## UI Layout
 
@@ -356,40 +356,40 @@ The three-panel layout:
 
 ### Scenario Editor
 
-Each scenario is a card showing:
+Each scenario is a card with:
 
 - Name (editable)
 - Trigger selector (dropdown: characteristic write/read, timer, startup) with relevant fields
-- Ordered list of steps, each rendered as a compact row with a type badge
-- Drag handle for reordering steps
-- "+" button to append a step (opens type picker)
+- Ordered list of steps, shown as compact rows with a type badge
+- Drag handle for reordering
+- "+" button to add steps (opens type picker)
 - Enable/disable toggle
 
 ### Function Editor
 
 CodeMirror-based editor with:
 
-- Function list with drag-to-reorder
+- Function list (drag to reorder)
 - Syntax highlighting and autocomplete for the sandbox API
-- Theme selection in settings tab
+- Theme selection available in settings
 
 ### Variable Table
 
-Simple table: Name | Type | Initial Value. Variables can be reordered via drag handles.
+Simple table: Name | Type | Initial Value. Drag handles for reordering.
 
 ### Test Panel
 
-Run functions with test inputs and verify expected outputs:
+Test functions with custom inputs and verify outputs:
 
-- Select a function to test
-- Provide input as hex bytes
-- Specify expected output (optional)
-- Run button executes the function and compares results
-- Pass/fail indicator shows test status
+- Select a function
+- Enter input as hex bytes
+- Optionally specify expected output
+- Hit run to execute and compare results
+- Pass/fail indicator shows status
 
 ## Schema Serialization
 
-Functions, variables, tests, and scenarios are included in the exported JSON alongside services:
+Functions, variables, tests, and scenarios are all included in the exported JSON alongside services:
 
 ```json
 {
@@ -405,9 +405,9 @@ Import detects the old format (bare `Service[]` array) for backward compatibilit
 
 ## Security Considerations
 
-User function bodies run in a sandboxed Web Worker. The sandbox:
+Function bodies run in a sandboxed Web Worker. The sandbox:
 
-- Provides only the documented API (`getVar`, `setVar`, `reader`, `writer`, etc.)
-- Has no access to `window`, `document`, `fetch`, `localStorage`, `WebSocket`, `eval`, or other browser APIs
-- Enforces a 5-second execution timeout to prevent infinite loops
+- Only exposes the documented API (`getVar`, `setVar`, `reader`, `writer`, etc.)
+- No access to `window`, `document`, `fetch`, `localStorage`, `WebSocket`, `eval`, or other browser APIs
+- 5-second execution timeout to prevent infinite loops
 - Catches and logs all exceptions without crashing the app

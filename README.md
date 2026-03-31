@@ -36,7 +36,7 @@ Depending on which connectivity backend you use:
 
 ### Browser Requirements
 
-The web UI requires the Web Serial API: **Chrome 89+**, **Edge 89+**, or **Opera 75+**
+Modern browser with WebSocket support (Chrome, Firefox, Edge, Safari)
 
 ## Features
 
@@ -47,10 +47,9 @@ The web UI requires the Web Serial API: **Chrome 89+**, **Edge 89+**, or **Opera
 
 ## Architecture
 
-```
-BLE Client  <--BLE-->  Plugin Backend  <--WS-->  Frontend (Web UI)
-                        (MCU/USB)
-```
+<p align="center">
+  <img src="docs/architecture.svg" alt="LogicGATT Architecture" width="400">
+</p>
 
 ## Quick Start
 
@@ -84,12 +83,6 @@ logic-gatt/
 └── shared/                # Shared TypeScript types
 ```
 
-See component READMEs for details:
-- [frontend/README.md](frontend/README.md)
-- [backend/README.md](backend/README.md)
-- [shared/README.md](shared/README.md)
-- [backend/plugins/README.md](backend/plugins/README.md)
-
 ## Make Targets
 
 | Target | Description |
@@ -103,7 +96,23 @@ See component READMEs for details:
 
 ## Documentation
 
-- [frontend/docs/LOGIC_CONSTRUCTOR.md](frontend/docs/LOGIC_CONSTRUCTOR.md) — Logic Constructor documentation
+| Document | Path |
+|----------|------|
+| **Frontend** | |
+| React App | [frontend/README.md](frontend/README.md) |
+| Logic Constructor | [frontend/docs/LOGIC_CONSTRUCTOR.md](frontend/docs/LOGIC_CONSTRUCTOR.md) |
+| **Backend** | |
+| Server | [backend/README.md](backend/README.md) |
+| Plugin Development | [backend/plugins/README.md](backend/plugins/README.md) |
+| **ble-uart Plugin** | |
+| UART Transport Library | [backend/plugins/ble-uart/misc/uart_transport_protocol/README.md](backend/plugins/ble-uart/misc/uart_transport_protocol/README.md) |
+| Protocol Specification | [backend/plugins/ble-uart/misc/uart_transport_protocol/PROTOCOL.md](backend/plugins/ble-uart/misc/uart_transport_protocol/PROTOCOL.md) |
+| ESP32 Firmware (Example) | [backend/plugins/ble-uart/misc/firmware/README.md](backend/plugins/ble-uart/misc/firmware/README.md) |
+| Debug Serial Utility | [backend/plugins/ble-uart/misc/firmware/utils/debug_serial/README.md](backend/plugins/ble-uart/misc/firmware/utils/debug_serial/README.md) |
+| **usb-ble Plugin** | |
+| Python Backend | [backend/plugins/usb-ble/python/README.md](backend/plugins/usb-ble/python/README.md) |
+| **Shared** | |
+| TypeScript Types | [shared/README.md](shared/README.md) |
 
 ## License
 

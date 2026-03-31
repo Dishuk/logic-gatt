@@ -124,42 +124,12 @@ void uart_rx_handler(void) {
 }
 ```
 
-## Command Definitions
+## Protocol Specification
 
-The library defines standard command bytes for a BLE UART bridge application:
-
-### Frontend -> Device
-| Command | Value | Description |
-|---------|-------|-------------|
-| `CMD_ADD_SERVICE` | 0x01 | Add a GATT service |
-| `CMD_ADD_CHAR` | 0x02 | Add a characteristic |
-| `CMD_APPLY_SCHEMA` | 0x03 | Apply the schema |
-| `CMD_SET_DEVICE_NAME` | 0x04 | Set device name |
-| `CMD_SET_ADV_DATA` | 0x05 | Set advertising data |
-| `CMD_SET_ADV_UUIDS` | 0x06 | Set advertising UUIDs |
-| `CMD_NOTIFY` | 0x22 | Send notification |
-| `CMD_READ_RESPONSE` | 0x23 | Respond to read request |
-| `CMD_PING` | 0x30 | Heartbeat ping |
-
-### Device -> Frontend
-| Command | Value | Description |
-|---------|-------|-------------|
-| `CMD_ACK` | 0x10 | Acknowledge command |
-| `CMD_NACK` | 0x11 | Reject command |
-| `CMD_CHAR_WRITE_EVT` | 0x20 | Characteristic write event |
-| `CMD_CHAR_READ_EVT` | 0x21 | Characteristic read event |
-| `CMD_PONG` | 0x31 | Heartbeat response |
-| `CMD_ADV_STARTED` | 0x32 | Advertising started |
-| `CMD_ADV_FAILED` | 0x33 | Advertising failed |
-
-### NACK Error Codes
-| Error | Value | Description |
-|-------|-------|-------------|
-| `ERR_INVALID_CMD` | 0x01 | Unknown command |
-| `ERR_CRC_MISMATCH` | 0x02 | CRC validation failed |
-| `ERR_INVALID_PAYLOAD` | 0x03 | Invalid payload format |
-| `ERR_SCHEMA_FULL` | 0x04 | Schema capacity exceeded |
-| `ERR_APPLY_FAILED` | 0x05 | Failed to apply schema |
+See [PROTOCOL.md](PROTOCOL.md) for the complete protocol specification including:
+- Frame format and CRC-8 algorithm
+- Command definitions with byte-level payload formats
+- Error codes and limits
 
 ## PlatformIO Integration
 

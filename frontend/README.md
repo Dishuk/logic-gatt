@@ -61,7 +61,7 @@ Output goes to `dist/`.
 
 ## Browser Support
 
-Requires Chrome 89+, Edge 89+, or Opera 75+ (Web Serial API).
+Modern browser with WebSocket support.
 
 ## Documentation
 

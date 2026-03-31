@@ -14,6 +14,7 @@ __pycache__/
 # ESP32 firmware
 backend/plugins/ble-uart/misc/firmware/.pio/
 backend/plugins/ble-uart/misc/firmware/sdkconfig.*.old
+backend/plugins/ble-uart/misc/firmware/platformio_override.ini
 
 # Logs and environment
 *.log

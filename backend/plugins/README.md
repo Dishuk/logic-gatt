@@ -160,7 +160,7 @@ pio run -t upload
 
 **ESP32 wiring:** Uses UART0 on default pins (GPIO 1 TX, GPIO 3 RX). Connect via USB.
 
-**Porting to other MCUs:** Implement the UART protocol (115200 baud, 8N1). See [ble-uart/misc/firmware/docs/](ble-uart/misc/firmware/docs/) for protocol specification.
+**Porting to other MCUs:** Implement the UART protocol (115200 baud, 8N1). See [ble-uart/misc/uart_transport_protocol/](ble-uart/misc/uart_transport_protocol/) for the transport library and protocol specification.
 
 ### usb-ble
 
