@@ -30,7 +30,6 @@ export function setupPluginRoutes(app: Express): void {
    * Get info for a specific plugin
    */
   app.get('/api/plugins/:id', (req: Request, res: Response) => {
-    // Validate plugin ID
     const idValidation = validatePluginId(req.params.id)
     if (!idValidation.valid) {
       res.status(400).json({ error: `Invalid plugin ID: ${idValidation.errors.join(', ')}` })
@@ -52,7 +51,6 @@ export function setupPluginRoutes(app: Express): void {
   app.all('/api/plugins/:id/*', async (req: Request, res: Response) => {
     const pluginId = req.params.id
 
-    // Validate plugin ID
     const idValidation = validatePluginId(pluginId)
     if (!idValidation.valid) {
       res.status(400).json({ error: `Invalid plugin ID: ${idValidation.errors.join(', ')}` })
@@ -66,11 +64,9 @@ export function setupPluginRoutes(app: Express): void {
       return
     }
 
-    // Get the path after /api/plugins/:id
     const routePath = '/' + req.params[0]
     const method = req.method as 'GET' | 'POST' | 'PUT' | 'DELETE'
 
-    // Find matching route
     const route = routes.find((r) => r.method === method && r.path === routePath)
 
     if (!route) {
@@ -81,13 +77,11 @@ export function setupPluginRoutes(app: Express): void {
       return
     }
 
-    // Execute handler
     try {
       await route.handler(req, res)
     } catch (err) {
       console.error(`[plugins-route] Plugin route handler error:`, err)
-      // Only send error response if headers haven't been sent yet
-      if (!res.headersSent) {
+      if (!res.headersSent) { // Handler may have already sent partial response
         res.status(500).json({
           error: err instanceof Error ? err.message : 'Route handler error',
         })

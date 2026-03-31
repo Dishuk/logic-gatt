@@ -43,26 +43,18 @@ async function main() {
   setupPresetRoutes(app)
   setupSessionRoutes(app)
 
-  // Serve frontend static files
   app.use(express.static(FRONTEND_DIST))
-
-  // 404 for unknown API routes
   app.use('/api/*', (_req, res) => {
     res.status(404).json({ error: 'Not found' })
   })
-
-  // SPA fallback - serve index.html for all non-API routes
   app.get('*', (_req, res) => {
     res.sendFile(path.join(FRONTEND_DIST, 'index.html'))
   })
 
-  // Setup WebSocket server
   setupWebSocket(server)
-
-  // Load plugins from /plugins/ directory
+  
   await loadPlugins()
 
-  // Start server
   server.on('error', (err: NodeJS.ErrnoException) => {
     if (err.code === 'EADDRINUSE') {
       console.error(`[backend] Port ${PORT} is already in use`)
@@ -77,7 +69,6 @@ async function main() {
     console.log(`[backend] Frontend served from: ${FRONTEND_DIST}`)
   })
 
-  // Graceful shutdown
   const shutdown = async () => {
     console.log('\n[backend] Shutting down...')
     await unloadAllPlugins()
@@ -85,7 +76,6 @@ async function main() {
       console.log('[backend] Server closed')
       process.exit(0)
     })
-    // Force exit if graceful shutdown fails
     setTimeout(() => {
       console.error('[backend] Forced shutdown after timeout')
       process.exit(1)

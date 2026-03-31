@@ -16,15 +16,7 @@ import { getPlugin, setBroadcastFunction, getActivePluginId } from './plugin-loa
 import { validateWsCommand, validateSchema, validateDeviceSettings, validateCharCommand } from './validation.js'
 import type { PluginCommand, PluginEvent } from '@logic-gatt/shared'
 
-// ============================================================================
-// State
-// ============================================================================
-
 const connectedClients = new Set<WebSocket>()
-
-// ============================================================================
-// Broadcast to all clients
-// ============================================================================
 
 function broadcast(event: PluginEvent): void {
   const message = JSON.stringify(event)
@@ -40,19 +32,13 @@ function broadcast(event: PluginEvent): void {
   }
 }
 
-// ============================================================================
-// Command Handler
-// ============================================================================
-
 async function handleCommand(ws: WebSocket, command: PluginCommand): Promise<void> {
-  // Validate command structure and type
   const cmdValidation = validateWsCommand(command)
   if (!cmdValidation.valid) {
     ws.send(JSON.stringify({ type: 'error', message: `Invalid command: ${cmdValidation.errors.join(', ')}` }))
     return
   }
 
-  // Get active plugin atomically to avoid race condition
   const activePluginId = getActivePluginId()
   const plugin = activePluginId ? getPlugin(activePluginId) : null
   if (!plugin) {
@@ -63,14 +49,12 @@ async function handleCommand(ws: WebSocket, command: PluginCommand): Promise<voi
   try {
     switch (command.type) {
       case 'upload-schema': {
-        // Validate schema
         const schemaValidation = validateSchema(command.schema)
         if (!schemaValidation.valid) {
           ws.send(JSON.stringify({ type: 'error', message: `Invalid schema: ${schemaValidation.errors.slice(0, 3).join(', ')}${schemaValidation.errors.length > 3 ? '...' : ''}` }))
           return
         }
 
-        // Validate settings
         const settingsValidation = validateDeviceSettings(command.settings)
         if (!settingsValidation.valid) {
           ws.send(JSON.stringify({ type: 'error', message: `Invalid settings: ${settingsValidation.errors.join(', ')}` }))
@@ -126,14 +110,9 @@ async function handleCommand(ws: WebSocket, command: PluginCommand): Promise<voi
   }
 }
 
-// ============================================================================
-// WebSocket Server Setup
-// ============================================================================
-
 export function setupWebSocket(server: HttpServer): void {
   const wss = new WebSocketServer({ server, path: '/ws' })
 
-  // Register broadcast function with plugin loader
   setBroadcastFunction(broadcast)
 
   wss.on('connection', (ws: WebSocket) => {
@@ -158,11 +137,9 @@ export function setupWebSocket(server: HttpServer): void {
 
     ws.on('error', (err) => {
       console.error('[ws] WebSocket error:', err)
-      // Don't delete here - the close event will handle cleanup
-      // Don't call ws.close() - error usually means socket is already broken
+      // Don't delete from connectedClients here - close event handles cleanup
     })
 
-    // Send welcome message
     ws.send(
       JSON.stringify({
         type: 'log',

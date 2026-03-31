@@ -25,10 +25,6 @@ type RouteHandler = (req: Request, res: Response) => Promise<void> | void
 /** Plugin route with typed express handler */
 type BackendPluginRoute = PluginRoute<RouteHandler>
 
-// ============================================================================
-// Active Plugin State
-// ============================================================================
-
 let activePluginId: string | null = null
 
 export function getActivePluginId(): string | null {
@@ -41,10 +37,6 @@ export function setActivePluginId(id: string | null): void {
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-
-// ============================================================================
-// Plugin Storage
-// ============================================================================
 
 interface LoadedPlugin {
   manifest: PluginManifest
@@ -74,16 +66,12 @@ function getPluginsDir(): string {
 
 const PLUGINS_DIR = getPluginsDir()
 
-// Broadcast function - will be set by ws-handler
+// Set by ws-handler during initialization
 let broadcastFn: ((event: PluginEvent) => void) | null = null
 
 export function setBroadcastFunction(fn: (event: PluginEvent) => void) {
   broadcastFn = fn
 }
-
-// ============================================================================
-// Plugin Context Factory
-// ============================================================================
 
 function createPluginContext(pluginId: string, pluginDir: string): PluginContext {
   return {
@@ -92,10 +80,7 @@ function createPluginContext(pluginId: string, pluginDir: string): PluginContext
 
     log(msg: string): void {
       console.log(`[plugin:${pluginId}] ${msg}`)
-      // Also broadcast to frontend
-      if (broadcastFn) {
-        broadcastFn({ type: 'log', message: `[${pluginId}] ${msg}` })
-      }
+      broadcastFn?.({ type: 'log', message: `[${pluginId}] ${msg}` }) // Also send to frontend
     },
 
     broadcast(event: PluginEvent): void {
@@ -108,10 +93,6 @@ function createPluginContext(pluginId: string, pluginDir: string): PluginContext
   }
 }
 
-// ============================================================================
-// Plugin Loading
-// ============================================================================
-
 /**
  * Resolve the entry path for a plugin.
  * In dev mode (tsx), prefer .ts files from source.
@@ -119,17 +100,15 @@ function createPluginContext(pluginId: string, pluginDir: string): PluginContext
  */
 async function resolvePluginEntry(sourceDir: string): Promise<string | null> {
   if (process.env.NODE_ENV !== 'production') {
-    // Dev mode: load .ts files directly via tsx
     const tsPath = path.join(sourceDir, 'index.ts')
     try {
       await fs.access(tsPath)
       return tsPath
     } catch {
-      // Fall through
+      // Fall through to .js
     }
   }
 
-  // Production: load compiled .js from same directory
   const jsPath = path.join(sourceDir, 'index.js')
   try {
     await fs.access(jsPath)
@@ -145,7 +124,6 @@ async function resolvePluginEntry(sourceDir: string): Promise<string | null> {
 async function loadPluginFromDir(dir: string): Promise<LoadedPlugin | null> {
   const manifestPath = path.join(dir, 'manifest.json')
 
-  // Check manifest exists
   try {
     await fs.access(manifestPath)
   } catch {
@@ -153,7 +131,6 @@ async function loadPluginFromDir(dir: string): Promise<LoadedPlugin | null> {
     return null
   }
 
-  // Parse manifest
   let manifest: PluginManifest
   try {
     const manifestContent = await fs.readFile(manifestPath, 'utf-8')
@@ -163,27 +140,23 @@ async function loadPluginFromDir(dir: string): Promise<LoadedPlugin | null> {
     return null
   }
 
-  // Validate required fields
   if (!manifest.id || !manifest.name || !manifest.version) {
     console.error(`[plugin-loader] Invalid manifest in ${dir}: missing required fields`)
     return null
   }
 
-  // Check if already loaded
   if (loadedPlugins.has(manifest.id)) {
     console.warn(`[plugin-loader] Plugin ${manifest.id} already loaded, skipping`)
     return loadedPlugins.get(manifest.id)!
   }
 
-  // Resolve plugin module path
   const modulePath = await resolvePluginEntry(dir)
   if (!modulePath) {
     console.error(`[plugin-loader] Plugin entry not found for ${manifest.id}`)
     return null
   }
 
-  // Create context - use the source directory for pluginDir
-  // so plugins can find their assets (e.g., Python backend)
+  // Use source directory so plugins can find their assets (e.g., Python backend)
   const ctx = createPluginContext(manifest.id, dir)
 
   // Dynamic import with timeout
@@ -213,10 +186,8 @@ async function loadPluginFromDir(dir: string): Promise<LoadedPlugin | null> {
     return null
   }
 
-  // Get routes (cast from unknown handler to express RouteHandler)
   const routes = instance.getRoutes() as BackendPluginRoute[]
 
-  // Call onLoad
   try {
     await instance.onLoad()
   } catch (err) {
@@ -257,7 +228,6 @@ async function loadPluginsFromDir(dir: string): Promise<void> {
         await loadPluginFromDir(pluginDir)
       } catch (err) {
         console.error(`[plugin-loader] Failed to load plugin from ${pluginDir}:`, err)
-        // Continue loading other plugins
       }
     }
   }
@@ -283,7 +253,6 @@ export async function unloadPlugin(pluginId: string): Promise<boolean> {
     return false
   }
 
-  // Call onUnload
   try {
     await plugin.instance.onUnload()
   } catch (err) {
