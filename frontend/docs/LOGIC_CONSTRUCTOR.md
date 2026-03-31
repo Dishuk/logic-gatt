@@ -333,57 +333,30 @@ interface Scenario {
 
 ## UI Layout
 
-The three-panel layout:
-
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│ TopBar: [Port] [Upload] [Import] [Export] [Examples] [Run/Stop]        │
-├──────────────┬─────────────────────────────────────────────────────────┤
-│              │  Tabs: [Scenarios] [Functions] [Variables] [Test] [⚙]   │
-│  Services    │                                                         │
-│  Panel       │  Active tab content:                                    │
-│              │   - Scenario list + step editor                         │
-│              │   - Function code editor                                │
-│              │   - Variable table                                      │
-│              │   - Test runner for functions                           │
-│              │   - Settings (theme picker)                             │
-├──────────────┴─────────────────────────────────────────────────────────┤
-│ Terminal: [Device] [Function]  (dual log views)                        │
-└────────────────────────────────────────────────────────────────────────┘
-```
-
 ### Scenario Editor
 
 Each scenario is a card with:
 
 - Name (editable)
-- Trigger selector (dropdown: characteristic write/read, timer, startup) with relevant fields
-- Ordered list of steps, shown as compact rows with a type badge
-- Drag handle for reordering
-- "+" button to add steps (opens type picker)
+- Trigger selector with relevant fields
+- Ordered list of steps (drag to reorder)
+- "+" button to add steps
 - Enable/disable toggle
 
 ### Function Editor
 
-CodeMirror-based editor with:
-
-- Function list (drag to reorder)
-- Syntax highlighting and autocomplete for the sandbox API
-- Theme selection available in settings
+CodeMirror-based editor with syntax highlighting and autocomplete. Function list with drag-to-reorder.
 
 ### Variable Table
 
-Simple table: Name | Type | Initial Value. Drag handles for reordering.
+Table: Name | Type | Initial Value. Drag handles for reordering.
 
 ### Test Panel
-
-Test functions with custom inputs and verify outputs:
 
 - Select a function
 - Enter input as hex bytes
 - Optionally specify expected output
-- Hit run to execute and compare results
-- Pass/fail indicator shows status
+- Run and compare results (pass/fail indicator)
 
 ## Schema Serialization
 
