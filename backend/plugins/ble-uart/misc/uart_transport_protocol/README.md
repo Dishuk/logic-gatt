@@ -1,27 +1,6 @@
 # UART Transport Protocol Library
 
-Platform-independent C library for UART framing protocol with CRC-8 validation.
-
-## Protocol Format
-
-```
-[START] [CMD] [LEN] [PAYLOAD...] [CRC8]
-  0xAA   1B    1B    0-255 bytes   1B
-```
-
-| Field | Size | Description |
-|-------|------|-------------|
-| START | 1 byte | Always `0xAA` |
-| CMD | 1 byte | Command identifier |
-| LEN | 1 byte | Payload length (0-255) |
-| PAYLOAD | 0-255 bytes | Command-specific data |
-| CRC8 | 1 byte | CRC-8 over CMD + LEN + PAYLOAD |
-
-### CRC-8 Algorithm
-
-- Polynomial: `0x31`
-- Initial value: `0x00`
-- Computed over: CMD, LEN, and PAYLOAD bytes
+Platform-independent C library for UART framing protocol with CRC-8 validation. See [PROTOCOL.md](PROTOCOL.md) for the complete protocol specification.
 
 ## API Reference
 
@@ -123,13 +102,6 @@ void uart_rx_handler(void) {
     }
 }
 ```
-
-## Protocol Specification
-
-See [PROTOCOL.md](PROTOCOL.md) for the complete protocol specification including:
-- Frame format and CRC-8 algorithm
-- Command definitions with byte-level payload formats
-- Error codes and limits
 
 ## PlatformIO Integration
 
