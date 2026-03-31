@@ -1,6 +1,6 @@
 {
   "id": "ble-uart",
-  "name": "BLE UART",
+  "name": "ble-uart",
   "version": "1.0.0",
   "description": "Connect to BLE device via USB-UART adapter",
   "icon": "usb",

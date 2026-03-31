@@ -24,7 +24,7 @@ If you prefer not to use mise, ensure you have:
 | Tool | Version | Purpose |
 |------|---------|---------|
 | [Node.js](https://nodejs.org/) | >= 18 | Backend server and frontend build |
-| [Python](https://www.python.org/) | >= 3.10 | USB-BLE plugin backend |
+| [Python](https://www.python.org/) | >= 3.10 | usb-ble plugin backend |
 | [Make](https://www.gnu.org/software/make/) | any | Build orchestration |
 
 ### Plugin-Specific Requirements
@@ -32,7 +32,7 @@ If you prefer not to use mise, ensure you have:
 Depending on which connectivity backend you use:
 
 - **ble-uart plugin**: Firmware for your MCU (reference ESP32 firmware included)
-- **PC Bluetooth (usb-ble plugin)**: Python >= 3.10 with pip (dependencies installed automatically)
+- **usb-ble plugin**: Python >= 3.10 with pip (dependencies installed automatically)
 
 ### Browser Requirements
 

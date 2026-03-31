@@ -1,6 +1,6 @@
 {
   "id": "usb-ble",
-  "name": "USB BLE Dongle",
+  "name": "usb-ble",
   "version": "1.0.0",
   "description": "Connect via USB Bluetooth dongle with local backend",
   "icon": "bluetooth",

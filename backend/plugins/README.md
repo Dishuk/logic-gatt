@@ -143,7 +143,7 @@ Dependencies are automatically merged into `backend/package.json` during `make i
 
 ## Quick Start
 
-### BLE UART
+### ble-uart
 
 The ble-uart plugin communicates with any MCU over USB-UART serial. An ESP32 reference firmware is included.
 
@@ -155,14 +155,14 @@ cd backend/plugins/ble-uart/misc/firmware
 # Flash ESP32 firmware (requires PlatformIO)
 pio run -t upload
 
-# Then in the frontend, select "BLE UART" and pick the serial port
+# Then in the frontend, select "ble-uart" and pick the serial port
 ```
 
 **ESP32 wiring:** Uses UART0 on default pins (GPIO 1 TX, GPIO 3 RX). Connect via USB.
 
 **Porting to other MCUs:** Implement the UART protocol (115200 baud, 8N1). See [ble-uart/misc/firmware/docs/](ble-uart/misc/firmware/docs/) for protocol specification.
 
-### USB BLE (PC Adapter)
+### usb-ble
 
 ```bash
 cd backend/plugins/usb-ble/python
@@ -172,7 +172,7 @@ python -m venv venv
 venv\Scripts\activate  # Windows
 pip install -r requirements.txt
 
-# Then in frontend, select "USB BLE Dongle" and click "Start Backend"
+# Then in frontend, select "usb-ble" and click "Start Backend"
 ```
 
 **Compatibility:**
