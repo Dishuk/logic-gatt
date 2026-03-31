@@ -53,12 +53,17 @@ Or use `make` from plugin directory (`plugins/ble-uart/`): `make fw-build`, `mak
 src/
 ├── main.c             # Entry point
 ├── app.c              # Init orchestrator (NVS, BLE, UART)
-├── protocol.c         # Frame parsing, CRC-8, command dispatch
-├── schema_service.c   # Dynamic GATT schema management
 ├── uart_service.c     # UART0 driver with RX task
 └── ble_service/
+    ├── ble_platform.c # Command handler, schema management
     └── ble_server.c   # NimBLE stack wrapper, advertising
+
+../uart_transport_protocol/   # Shared library (linked via lib_extra_dirs)
+├── include/uart_transport.h  # Protocol API and command definitions
+└── src/uart_transport.c      # Frame parsing, CRC-8, send/receive
 ```
+
+The UART transport protocol is implemented as a separate reusable library in `../uart_transport_protocol/`. See [uart-transport-protocol/README.md](../uart_transport_protocol/README.md) for protocol details and API documentation.
 
 ## Documentation
 

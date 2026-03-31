@@ -1,0 +1,8 @@
+{
+  "name": "uart_transport_protocol",
+  "version": "1.0.0",
+  "description": "Platform-independent UART framing protocol library with CRC-8 validation",
+  "keywords": ["uart", "protocol", "framing", "crc8", "embedded"],
+  "frameworks": "*",
+  "platforms": "*"
+}
